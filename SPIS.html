@@ -1,0 +1,2650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPIS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D1B2A;--card:#111E2E;--border:#1E3A5F;
+  --cyan:#00C2CB;--blue:#00A1E0;--amber:#F59E0B;
+  --text:#E2E8F0;--muted:#94A3B8;--dim:#64748B;
+  --green:#22C55E;--red:#EF4444;--sw:220px;
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
+.mono{font-family:'IBM Plex Mono',monospace}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle}
+.sidebar{width:var(--sw);min-width:var(--sw);height:100vh;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;position:fixed;left:0;top:0;z-index:20}
+.sb-logo{padding:14px 16px;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--cyan);letter-spacing:.12em}
+.sb-logo span{display:block;font-size:9px;font-weight:400;color:var(--muted);letter-spacing:.06em;margin-top:2px;text-transform:uppercase}
+.sb-section{padding:6px 0;flex:1}
+.sb-label{padding:8px 16px 4px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 16px;cursor:pointer;font-size:12.5px;color:var(--muted);border-left:3px solid transparent;transition:all .12s;user-select:none}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.nav-item.active{color:var(--cyan);border-left-color:var(--cyan);background:rgba(0,194,203,.06)}
+.sb-sellers{border-top:1px solid var(--border);padding:10px}
+.seller-card{padding:8px;border-radius:6px;cursor:pointer;margin-bottom:4px;border:1px solid transparent;transition:all .12s}
+.seller-card:hover{background:rgba(255,255,255,.03)}
+.seller-card.active{border-color:var(--border);background:rgba(0,194,203,.06)}
+.seller-name{font-size:12px;font-weight:600;margin-bottom:2px}
+.seller-meta{font-size:10px;color:var(--muted);display:flex;gap:10px;margin-bottom:6px;font-family:'IBM Plex Mono',monospace}
+.pbar{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.pfill{height:100%;border-radius:2px;transition:width .3s}
+.main{margin-left:var(--sw);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:50px;min-height:50px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:10}
+.content{flex:1;overflow-y:auto;padding:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px 18px}
+.stat-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.stat-value{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.score-circle{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'IBM Plex Mono',monospace;flex-shrink:0}
+.table{width:100%;border-collapse:collapse}
+.table th{text-align:left;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);padding:8px 10px;border-bottom:1px solid var(--border)}
+.table td{padding:10px;border-bottom:1px solid rgba(30,58,95,.4);font-size:12.5px}
+.table tr:last-child td{border-bottom:none}
+.table tr:hover td{background:rgba(255,255,255,.015)}
+.tabs-row{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.tab-btn{padding:8px 14px;cursor:pointer;font-size:12.5px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;font-family:'IBM Plex Sans',sans-serif;transition:all .12s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.sf-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.sf-field{background:rgba(0,161,224,.06);border:1px solid rgba(0,161,224,.18);border-radius:6px;padding:10px 12px}
+.sf-label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--blue);margin-bottom:4px}
+.sf-value{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--blue)}
+.seller-field{background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.18);border-radius:6px;margin-bottom:12px}
+.seller-field-label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--amber);padding:8px 12px 0}
+.seller-field textarea{width:100%;background:transparent;border:none;color:var(--amber);font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;resize:vertical;outline:none;min-height:72px;padding:6px 12px 10px;line-height:1.6}
+.gen-block{background:rgba(0,194,203,.05);border:1px solid rgba(0,194,203,.2);border-radius:6px;padding:16px;font-size:12.5px;line-height:1.75;white-space:pre-wrap;color:var(--text)}
+.acc-card{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden}
+.acc-header{display:flex;align-items:center;padding:12px 14px;cursor:pointer;gap:10px;user-select:none}
+.acc-header:hover{background:rgba(255,255,255,.02)}
+.acc-body{padding:14px;border-top:1px solid var(--border)}
+button{cursor:pointer;font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:500;border:none;border-radius:6px;padding:7px 14px;transition:all .12s}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--cyan);color:#0D1B2A}
+.btn-primary:hover:not(:disabled){background:#00d4de}
+.btn-secondary{background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover:not(:disabled){background:rgba(255,255,255,.11)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover:not(:disabled){background:#0090cc}
+.btn-success{background:var(--green);color:#fff}
+.btn-success:hover:not(:disabled){background:#16a34a}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover:not(:disabled){background:#dc2626}
+.btn-amber{background:var(--amber);color:#0D1B2A}
+select{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 8px;outline:none}
+textarea{font-family:'IBM Plex Sans',sans-serif}
+.callout-warn{background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.28);border-radius:6px;padding:10px 12px;font-size:12px;color:#fca5a5}
+.callout-info{background:rgba(0,194,203,.07);border:1px solid rgba(0,194,203,.22);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--cyan)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+.grid-4-2{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+.row{display:flex;align-items:center;gap:10px}
+.row-between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h2{font-size:18px;font-weight:700}
+h3{font-size:14px;font-weight:600}
+h4{font-size:12px;font-weight:600}
+.tier-1-btn{background:rgba(0,194,203,.1);border:1px solid rgba(0,194,203,.3);color:var(--cyan);border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .12s;margin-right:6px;margin-bottom:6px;display:inline-block}
+.tier-1-btn:hover,.tier-1-btn.active{background:rgba(0,194,203,.2);border-color:var(--cyan)}
+.api-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:40px 20px}
+input[type="password"],input[type="text"]{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;padding:10px 14px;outline:none;width:100%}
+input[type="password"]:focus,input[type="text"]:focus{border-color:var(--cyan)}
+.heat-card{border-radius:8px;padding:16px;cursor:pointer;transition:all .15s;background:var(--card)}
+.heat-card:hover{transform:translateY(-1px)}
+.heat-green{border:2px solid var(--green)}
+.heat-amber{border:2px solid var(--amber)}
+.heat-red{border:2px solid var(--red)}
+.section-gap{margin-bottom:24px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo, useCallback } = React;
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const SELLERS_DATA = [
+  { id:'alex', name:'Alex Rivera', quota:2200000, pipeline:4800000, win_rate:0.21,
+    avg_deal:380000, forecast_commit:900000, forecast_best:1400000,
+    ytd_closed:820000, open_opps:7, plan_status:'approved', plan_score:88 },
+  { id:'morgan', name:'Morgan Lee', quota:1900000, pipeline:3200000, win_rate:0.19,
+    avg_deal:340000, forecast_commit:700000, forecast_best:1100000,
+    ytd_closed:560000, open_opps:5, plan_status:'approved', plan_score:74 },
+  { id:'taylor', name:'Taylor Brooks', quota:2000000, pipeline:2100000, win_rate:0.18,
+    avg_deal:360000, forecast_commit:400000, forecast_best:900000,
+    ytd_closed:210000, open_opps:4, plan_status:'needs_revision', plan_score:52 },
+];
+
+const ACCOUNTS_DATA = {
+  alex:[
+    { name:'Salesforce', industry:'Technology', revenue:'26B', tier:1, access:'Warm',
+      trigger:'Board mandate to govern AI agents accessing CRM and customer data at scale before CISO approves Agentforce production expansion' },
+    { name:'Wells Fargo', industry:'Financial Services', revenue:'82B', tier:1, access:'Partner',
+      trigger:'OCC consent order requiring enhanced data governance across cloud environments; legacy DLP flagged as insufficient' },
+    { name:'McKesson Corporation', industry:'Healthcare', revenue:'264B', tier:1, access:'Cold',
+      trigger:'Post-divestiture cloud migration creating unclassified PHI across separated infrastructure — HIPAA exposure confirmed in audit' },
+    { name:'Visa Inc.', industry:'Financial Services', revenue:'33B', tier:1, access:'Warm',
+      trigger:'PCI-DSS 4.0 compliance deadline; agentic AI processing cardholder data in fraud detection with no classification layer' },
+    { name:'Chevron Corporation', industry:'Energy', revenue:'235B', tier:1, access:'Cold',
+      trigger:'OT/IT convergence exposing sensitive operational data without classification or access governance — CIO cloud-first initiative' },
+    { name:'Gap Inc.', industry:'Retail', revenue:'15B', tier:2, access:'Cold',
+      trigger:'CCPA audit risk from cloud migration of customer PII with no classification layer — surfaced by Legal in Q1' },
+    { name:'Levi Strauss & Co.', industry:'Retail', revenue:'6B', tier:2, access:'Partner',
+      trigger:'Global expansion creating GDPR and CCPA data residency obligations; CDO hired Q2 with governance mandate' },
+    { name:'Intel Corporation', industry:'Technology', revenue:'54B', tier:3, access:'Cold',
+      trigger:'Semiconductor IP protection mandate; CISO evaluating DSPM for design data across multi-cloud development environments' },
+  ],
+  morgan:[
+    { name:'Applied Materials', industry:'Semiconductor', revenue:'27B', tier:1, access:'Warm',
+      trigger:'AI chip design workflows generating IP across cloud with no classification or exfiltration controls — board IP protection mandate' },
+    { name:'Gilead Sciences', industry:'Biotech', revenue:'27B', tier:1, access:'Partner',
+      trigger:'FDA 21 CFR Part 11 requirements; AI drug discovery workflows accessing unclassified patient data at scale' },
+    { name:'Lam Research', industry:'Semiconductor', revenue:'17B', tier:1, access:'Cold',
+      trigger:'Semiconductor process IP at risk in cloud R&D environments; talent mobility incidents exposing data governance gaps' },
+    { name:'NetApp', industry:'Technology', revenue:'6B', tier:1, access:'Partner',
+      trigger:'Varonis contract renewal — CISO dissatisfied with agent overhead and limited SaaS connector coverage; actively evaluating alternatives' },
+    { name:'Franklin Templeton', industry:'Financial Services', revenue:'9B', tier:2, access:'Warm',
+      trigger:'SEC marketing rule and data privacy obligations; AI investment research generating unclassified sensitive client information' },
+    { name:'Seagate Technology', industry:'Technology', revenue:'7B', tier:2, access:'Cold',
+      trigger:'Global manufacturing creating data residency obligations across 30+ countries; recent acquisition adding unclassified data environments' },
+    { name:'Bio-Rad Laboratories', industry:'Life Sciences', revenue:'3B', tier:2, access:'Cold',
+      trigger:'ISO 13485 and FDA data integrity audit findings; legacy DLP unable to classify sensitive research data in cloud' },
+    { name:'Sanmina Corporation', industry:'Manufacturing', revenue:'9B', tier:3, access:'Cold',
+      trigger:'Defense contract electronics manufacturing creating CMMC data handling requirements; no current DSPM solution' },
+  ],
+  taylor:[
+    { name:'PG&E Corporation', industry:'Energy/Utilities', revenue:'21B', tier:1, access:'Cold',
+      trigger:'NERC CIP compliance requirements for OT data; CPUC oversight intensifying; CISO mandated to establish data security posture baseline by Q2' },
+    { name:'Intuitive Surgical', industry:'Medical Devices', revenue:'7B', tier:1, access:'Warm',
+      trigger:'FDA premarket submission data governance; AI surgical planning data processed across cloud without classification or audit trail' },
+    { name:'First Republic Bank', industry:'Financial Services', revenue:'13B', tier:2, access:'Partner',
+      trigger:'OCC data governance requirements following acquisition integration; CDO mandate to unify data classification across merged cloud environments' },
+    { name:'Varian Medical Systems', industry:'Healthcare Technology', revenue:'3B', tier:2, access:'Cold',
+      trigger:'Siemens integration creating PHI governance gap across radiation oncology platforms — post-acquisition security review flagged' },
+    { name:'RH (Restoration Hardware)', industry:'Retail', revenue:'4B', tier:3, access:'Cold',
+      trigger:'International expansion creating customer PII obligations across markets; no current data classification layer — CTO initiated vendor evaluation' },
+    { name:'Del Monte Foods', industry:'Consumer Goods', revenue:'2B', tier:3, access:'Cold',
+      trigger:'CCPA and consumer privacy obligations from direct-to-consumer digital platform; marketing cloud generating unclassified personal data' },
+    { name:'Clif Bar & Company', industry:'Consumer Goods', revenue:'1B', tier:3, access:'Cold',
+      trigger:'B-Corp certification data transparency requirements; supply chain sustainability data with no governance layer' },
+    { name:'Elanco Animal Health', industry:'Life Sciences', revenue:'5B', tier:3, access:'Cold',
+      trigger:'Veterinary pharmaceutical data governance under FDA and EU regulations; acquisition integrating unclassified research data' },
+  ],
+};
+
+const PRE_POPULATED_INTAKE = {
+  alex:{
+    pain_hypothesis:`The dominant trigger across my territory is agentic AI deployment without a data governance layer. Salesforce is expanding Agentforce across enterprise clients and has no classification layer on the CRM data those agents are accessing. Four of my eight accounts have announced AI production rollouts in the past 90 days with no visible DSPM in place.`,
+    competitive:`Varonis is the incumbent at NetApp and is up for renewal. I know the CISO is dissatisfied with agent overhead and cloud connector coverage. Microsoft Purview is the default at Wells Fargo at the IT level but the CDO is not satisfied with multi-cloud depth. No known DSPM evaluation at the other accounts yet.`,
+    partner:`Deloitte has a managing director relationship at McKesson and has offered to co-sponsor an executive briefing. AWS alliance team has a contact at Visa. No other named partner contacts confirmed yet.`,
+    pipeline_strategy:`Primary sources are outbound to CISO and CDO personas at Tier 1 accounts, partner co-sell with Deloitte at McKesson, and a Cyera field event invitation to Salesforce and Visa contacts in Q3. Target 2 first meetings per month to reach 3.5x coverage.`,
+    self_assessment:`Strongest on the Salesforce account — I understand their Agentforce architecture and have a warm champion in the data governance team. Least confident on cold outbound to Chevron and McKesson where I have no existing relationships.`,
+    manager_ask:`Executive sponsorship for a joint call at Salesforce with the CISO. Competitive coaching on Purview displacement at Wells Fargo. Introduction to Cyera's Deloitte alliance contact.`,
+  },
+  morgan:{
+    pain_hypothesis:`My territory is dominated by semiconductor and life sciences companies where IP protection and FDA compliance are the primary data security triggers. Applied Materials and Lam Research have both announced AI-assisted chip design initiatives with no visible data governance layer on the design IP. Gilead's FDA 21 CFR Part 11 exposure on AI drug discovery is the clearest regulatory trigger I have.`,
+    competitive:`Varonis is up for renewal at NetApp — this is my highest-confidence near-term opportunity. No known incumbents at Applied Materials or Gilead. BigID has been mentioned at Franklin Templeton by a partner contact.`,
+    partner:`KPMG has a relationship at Gilead at the compliance level. Insight Enterprises covers NetApp and has offered a warm introduction to the CISO.`,
+    pipeline_strategy:`Lead with the NetApp Varonis renewal as the fastest path to a qualified opportunity. Run outbound to CISO and Chief IP Counsel personas at Applied Materials and Lam Research. Target Gilead through the KPMG compliance relationship.`,
+    self_assessment:`Strong on semiconductor IP narrative — I understand the design data risk. Weakest on financial services — Franklin Templeton feels like a longer cycle.`,
+    manager_ask:`Help crafting the IP protection narrative for semiconductor accounts. Introduction to Cyera's life sciences customer references for Gilead.`,
+  },
+  taylor:{
+    pain_hypothesis:`My territory has real regulatory triggers but I have not yet converted them into first meetings. PG&E has the clearest urgency — NERC CIP compliance with CPUC oversight — but I have no warm access. Intuitive Surgical is my best near-term opportunity because I have a warm contact in their security team. My pipeline is significantly below target and I need to convert at least 2 Tier 1 accounts into qualified opportunities in the next 45 days.`,
+    competitive:`No known incumbents confirmed at any of my Tier 1 accounts. I believe PG&E is running a manual classification process which is my primary displacement opportunity.`,
+    partner:`No confirmed partner contacts at this time. Pursuing an introduction through the Palo Alto Networks alliance team at PG&E.`,
+    pipeline_strategy:`Prioritize Intuitive Surgical as fastest path to first meeting given warm access. Run targeted outbound to PG&E CISO using NERC CIP angle. Request RD executive sponsorship for PG&E.`,
+    self_assessment:`Weakest territory on the team for pipeline coverage. I need coaching on converting cold outbound to first meetings and on building a partner strategy quickly.`,
+    manager_ask:`Executive sponsorship for PG&E. Help identifying partner contacts. Coaching on outbound conversion for cold accounts.`,
+  },
+};
+
+const PRE_POPULATED_PLANS = {
+  'Salesforce_overview':`Executive Summary
+Salesforce represents the highest-urgency opportunity in this territory. The board has mandated Agentforce expansion across enterprise workflows before Q3 but the CISO has not approved production rollout until a data classification layer is in place. This creates a direct time-bound executive decision with board-level visibility.
+
+Point of View
+Salesforce has publicly committed to enabling Agentforce across its enterprise platform by Q3. The data those agents will access — customer records, deal data, support histories — represents some of the most sensitive information in your environment. Before Agentforce goes to production, every enterprise security leader at a company of your scale is asking the same question: do we have complete visibility into what data those agents can reach, and are we confident in how it is classified and governed? That is the conversation I would like to have with you.`,
+
+  'Salesforce_stakeholders':`NAME: Marc Benioff | TITLE: Chairman and CEO | DEPT: Executive | STANCE: Neutral | ACTION: Board context only — reference AI mandate in CISO outreach
+NAME: Mark Torres | TITLE: Chief Information Security Officer | DEPT: Security | STANCE: Supporter | ACTION: Confirm introduction via Sara Chen within 10 days
+NAME: Sara Chen | TITLE: VP Data Governance | DEPT: Data and Analytics | STANCE: Supporter | ACTION: Brief on Cyera Agentforce positioning and request CISO introduction
+NAME: David Schmaier | TITLE: Chief Product Officer | DEPT: Product | STANCE: Neutral | ACTION: Secondary contact — understands Agentforce data requirements
+NAME: Amy Weaver | TITLE: President and CFO | DEPT: Finance | STANCE: Neutral | ACTION: Economic buyer context — platform investment will require CFO visibility
+NAME: Param Kahlon | TITLE: EVP Platform | DEPT: Engineering | STANCE: Neutral | ACTION: Technical stakeholder for Data Cloud and Agentforce architecture discussions`,
+
+  'Salesforce_businesscase':`CURRENT STATE
+- Agentforce agents access unclassified CRM data including customer PII, deal records, and financial information
+- Manual classification covers less than 40% of cloud data estate and is performed quarterly
+- CISO has blocked Agentforce production expansion until a governance layer is confirmed
+BUSINESS IMPACT
+- Board AI mandate delayed — direct revenue and competitive implications from Agentforce timeline slip
+- Estimated $2M+ annual cost of manual classification work that produces incomplete results
+- CCPA and emerging AI governance regulations create regulatory exposure for unclassified PII accessed by AI agents
+FUTURE STATE
+- Complete visibility across Salesforce cloud and SaaS estate within 72 hours of Cyera deployment
+- CISO approves Agentforce production expansion before Q3 board presentation
+- Automated classification eliminates manual overhead and creates continuous AI governance posture`,
+
+  'Salesforce_pursuit':`ACTION: Brief Sara Chen on Cyera Agentforce governance positioning | STAKEHOLDER: Sara Chen, VP Data Governance | TIMELINE: Week 1
+ACTION: Sara Chen facilitates introduction to CISO Mark Torres | STAKEHOLDER: Mark Torres, CISO | TIMELINE: Week 2
+ACTION: First CISO meeting — lead with Agentforce governance gap not product | STAKEHOLDER: Mark Torres, CISO | TIMELINE: Week 3
+ACTION: Send Cyera AI governance reference from comparable enterprise | STAKEHOLDER: Mark Torres, CISO | TIMELINE: Week 3
+ACTION: Cyera VP engagement — executive peer meeting with CISO | STAKEHOLDER: Mark Torres, CISO | TIMELINE: Week 4
+ACTION: Technical discovery with Data Cloud and security architecture team | STAKEHOLDER: Param Kahlon, EVP Platform | TIMELINE: Week 5
+ACTION: Business case presentation to CISO with Agentforce ROI framework | STAKEHOLDER: Mark Torres, CISO | TIMELINE: Week 6
+ACTION: POC scope agreement — 72 hour deployment on subset of Data Cloud | STAKEHOLDER: Mark Torres and Sara Chen | TIMELINE: Week 7`,
+
+  'Wells Fargo_overview':`Executive Summary
+Wells Fargo is operating under an OCC consent order requiring enhanced data governance across cloud environments by Q4. The legacy DLP solution has been flagged as insufficient and the CDO has a funded mandate to remediate. This is a time-bound compliance-driven initiative with budget already allocated.
+
+Point of View
+Wells Fargo's OCC consent order has made data governance a board-level priority. The challenge every CDO at a bank your size is navigating right now is that the volume of sensitive financial data moving into cloud environments is outpacing the classification tools that were built for a different architecture. Legacy DLP was not designed for multi-cloud and does not provide the visibility the OCC is asking for. I would value 20 minutes to share how peer institutions are using Cyera to close that gap before their compliance deadlines.`,
+
+  'Wells Fargo_stakeholders':`NAME: Charlie Scharf | TITLE: Chief Executive Officer | DEPT: Executive | STANCE: Neutral | ACTION: Board context only — data governance is a consent order priority
+NAME: Derek Flowers | TITLE: Chief Risk Officer | DEPT: Risk | STANCE: Supporter | ACTION: Engage on OCC consent order data governance requirements
+NAME: Saul Van Beurden | TITLE: Chief Information Officer | DEPT: Technology | STANCE: Neutral | ACTION: Technical stakeholder for cloud infrastructure and data classification scope
+NAME: Dana George | TITLE: Chief Data Officer | DEPT: Data and Analytics | STANCE: Supporter | ACTION: Primary Economic Buyer — request introduction via Deloitte FSG partner
+NAME: Michael Loughlin | TITLE: Chief Compliance Officer | DEPT: Compliance | STANCE: Supporter | ACTION: OCC consent order briefing — confirm classification requirements
+NAME: Mike Weinbach | TITLE: CEO Consumer Banking | DEPT: Consumer Banking | STANCE: Neutral | ACTION: Secondary context — consumer data is largest scope exposure`,
+
+  'Wells Fargo_businesscase':`CURRENT STATE
+- Legacy DLP provides coverage for structured core banking data but has no visibility into cloud storage, SaaS, or unstructured environments
+- OCC consent order explicitly requires enhanced data governance — current toolset cannot demonstrate compliance
+- CDO-led remediation initiative is funded but lacks a vendor selected for multi-cloud classification
+BUSINESS IMPACT
+- OCC consent order non-compliance risk — failure to remediate could escalate to public enforcement action with $10M+ fine exposure
+- Estimated 500+ analyst hours per quarter consumed by manual classification that produces incomplete audit evidence
+- Multi-cloud gap leaves sensitive customer financial data, PII, and transaction records unclassified across environments auditors can examine
+FUTURE STATE
+- Complete classification coverage across Wells Fargo's full cloud and SaaS estate within days of Cyera deployment
+- CDO presents defensible data governance posture to OCC examiners within consent order window
+- Automated classification eliminates manual audit burden and creates continuous compliance record`,
+
+  'Wells Fargo_pursuit':`ACTION: Identify Deloitte FSG managing director and request co-sponsored CDO introduction | STAKEHOLDER: Deloitte FSG Partner | TIMELINE: Week 1
+ACTION: Send CDO cold outreach referencing OCC consent order data governance mandate | STAKEHOLDER: Dana George, Chief Data Officer | TIMELINE: Week 1
+ACTION: Brief Deloitte contact on Cyera OCC consent order positioning | STAKEHOLDER: Deloitte FSG Partner | TIMELINE: Week 2
+ACTION: CDO introductory meeting with Deloitte co-sponsorship | STAKEHOLDER: Dana George, Chief Data Officer | TIMELINE: Week 3
+ACTION: Send Chief Risk Officer outreach — position Cyera as enabler for CDO governance initiative | STAKEHOLDER: Derek Flowers, Chief Risk Officer | TIMELINE: Week 3
+ACTION: Deliver executive briefing on OCC remediation and Cyera multi-cloud classification architecture | STAKEHOLDER: Dana George and Derek Flowers | TIMELINE: Week 4
+ACTION: Technical discovery — scope cloud data estate and DLP coverage gaps | STAKEHOLDER: Saul Van Beurden, CIO | TIMELINE: Week 5
+ACTION: Present evaluation proposal and POV scope to CDO | STAKEHOLDER: Dana George, Chief Data Officer | TIMELINE: Week 6`,
+
+  'McKesson Corporation_overview':`Executive Summary
+McKesson has a confirmed HIPAA exposure from post-divestiture cloud migration — an internal audit finding creates regulatory urgency and a clear remediation mandate for the CISO. The Deloitte managing director relationship provides a warm co-sponsorship path to the executive team. This is the clearest compliance trigger in the territory.
+
+Point of View
+McKesson's post-divestiture cloud migration has created exactly the kind of PHI governance gap that surfaces in HIPAA audits. When infrastructure separates and data moves across newly divided environments, the classification controls that were in place no longer follow the data. Your internal audit has already identified the exposure — the question is how quickly you can demonstrate a credible remediation plan to OCR and your board. I would like to show you how Cyera helps healthcare distributors of your scale close that gap in days, not quarters.`,
+
+  'McKesson Corporation_stakeholders':`NAME: Brian Tyler | TITLE: Chief Executive Officer | DEPT: Executive | STANCE: Neutral | ACTION: Board context — HIPAA audit finding has executive visibility
+NAME: Rick Crowley | TITLE: Chief Information Security Officer | DEPT: Security | STANCE: Supporter | ACTION: Primary Economic Buyer — request introduction via Deloitte co-sponsor
+NAME: Kathleen McElligott | TITLE: Chief Information Officer | DEPT: Technology | STANCE: Neutral | ACTION: Cloud migration scope and infrastructure context
+NAME: Tom Hartley | TITLE: Chief Privacy Officer | DEPT: Legal and Compliance | STANCE: Supporter | ACTION: Brief on PHI classification scope post-divestiture separation
+NAME: Britt Vitalone | TITLE: Chief Financial Officer | DEPT: Finance | STANCE: Neutral | ACTION: Economic buyer context — remediation has budget authority from audit finding
+NAME: James Clegg | TITLE: VP Cloud Security | DEPT: Security | STANCE: Supporter | ACTION: Technical champion — brief on agentless deployment ahead of CISO meeting`,
+
+  'McKesson Corporation_businesscase':`CURRENT STATE
+- Post-divestiture cloud migration separated infrastructure and created unclassified PHI across newly divided environments
+- Internal audit confirmed HIPAA exposure requiring documented remediation plan
+- Manual classification does not cover cloud storage or SaaS environments generated during IT separation
+BUSINESS IMPACT
+- HIPAA audit finding creates direct OCR enforcement risk — penalties range from $100 to $50,000 per violation with annual caps up to $1.9M per category
+- Unclassified PHI creates breach notification risk under HIPAA Breach Notification Rule
+- Remediation timeline pressure — board and legal team expect a credible plan within 90 days of audit finding
+FUTURE STATE
+- Complete PHI classification across McKesson's post-divestiture cloud estate within 72 hours of Cyera deployment
+- CISO presents defensible HIPAA remediation posture to board and OCR with documented classification evidence
+- Continuous classification governance prevents recurrence as cloud environments evolve post-separation`,
+
+  'McKesson Corporation_pursuit':`ACTION: Activate Deloitte managing director relationship — request CISO co-sponsored introduction | STAKEHOLDER: Deloitte MD and Rick Crowley, CISO | TIMELINE: Week 1
+ACTION: Brief Chief Privacy Officer on PHI classification scope across separated infrastructure | STAKEHOLDER: Tom Hartley, Chief Privacy Officer | TIMELINE: Week 2
+ACTION: CISO introductory meeting with Deloitte co-sponsorship — lead with audit finding urgency | STAKEHOLDER: Rick Crowley, CISO | TIMELINE: Week 2
+ACTION: Technical architecture overview — agentless deployment, 72-hour time-to-value | STAKEHOLDER: James Clegg, VP Cloud Security | TIMELINE: Week 3
+ACTION: Conduct discovery on post-divestiture cloud infrastructure and PHI data flows | STAKEHOLDER: Kathleen McElligott, CIO | TIMELINE: Week 4
+ACTION: Cyera executive sponsor engagement — VP peer meeting with CISO | STAKEHOLDER: Rick Crowley, CISO | TIMELINE: Week 4
+ACTION: Submit POV proposal scoped to McKesson's specific divestiture environment | STAKEHOLDER: Rick Crowley and Kathleen McElligott | TIMELINE: Week 5
+ACTION: Present POV results and commercial proposal to CISO | STAKEHOLDER: Rick Crowley, CISO | TIMELINE: Week 7`,
+
+  'Visa Inc._overview':`Executive Summary
+Visa faces a PCI-DSS 4.0 compliance deadline requiring classification controls on cardholder data processed by AI fraud detection models. The AWS alliance team has a warm contact in Visa's cloud security organization providing a direct entry path to the CISO. This is a funded compliance initiative with a hard external deadline.
+
+Point of View
+Visa's PCI-DSS 4.0 compliance program has a problem most payment security leaders are only beginning to confront: the cardholder data that AI fraud detection models access and generate exists in cloud environments that traditional PCI tools were not designed to govern. The 4.0 requirement for continuous data classification is straightforward in a structured database — it is significantly harder when AI workloads are generating derived cardholder data across cloud environments at scale. That is exactly the gap I want to walk through with your security team.`,
+
+  'Visa Inc._stakeholders':`NAME: Ryan McInerney | TITLE: Chief Executive Officer | DEPT: Executive | STANCE: Neutral | ACTION: Board context — PCI-DSS 4.0 and AI security are VP priorities
+NAME: Paul Fabara | TITLE: Chief Risk Officer | DEPT: Risk | STANCE: Supporter | ACTION: Co-Economic Buyer — cardholder data AI governance briefing
+NAME: Rajat Taneja | TITLE: President Technology | DEPT: Technology | STANCE: Neutral | ACTION: Technical context for AI infrastructure and cloud architecture
+NAME: Mark Nelsen | TITLE: SVP Risk and Identity Solutions | DEPT: Risk and Security | STANCE: Supporter | ACTION: AI fraud detection data classification discovery meeting
+NAME: Linda Rossetti | TITLE: VP Cloud Security | DEPT: Security | STANCE: Supporter | ACTION: Primary champion — warm introduction via AWS alliance contact
+NAME: Jim McCarthy | TITLE: Chief Compliance Officer | DEPT: Compliance | STANCE: Supporter | ACTION: PCI-DSS 4.0 roadmap alignment and classification requirements review`,
+
+  'Visa Inc._businesscase':`CURRENT STATE
+- AI fraud detection models process cardholder data in cloud environments without automated classification controls
+- PCI-DSS 4.0 deadline requires continuous classification of all cardholder data environments including AI workloads
+- Existing classification coverage does not extend to cloud-native AI pipelines generating derived cardholder data
+BUSINESS IMPACT
+- PCI-DSS 4.0 non-compliance risk — loss of card processing authority would represent an existential business risk for Visa
+- Potential Qualified Security Assessor failure at next audit cycle if AI classification gaps are not remediated before deadline
+- AI fraud detection expansion constrained by security review until classification governance is confirmed
+FUTURE STATE
+- Complete visibility into all cardholder data across Visa's cloud and AI workload environments within 72 hours
+- PCI-DSS 4.0 continuous classification requirement met across all card data environments before compliance deadline
+- AI fraud detection program can expand with confidence that all cardholder data access is classified and governed`,
+
+  'Visa Inc._pursuit':`ACTION: Engage AWS alliance contact at Visa for warm introduction to VP Cloud Security | STAKEHOLDER: Linda Rossetti, VP Cloud Security | TIMELINE: Week 1
+ACTION: Prepare PCI-DSS 4.0 AI workload briefing specific to Visa's fraud detection platform | STAKEHOLDER: Alex Rivera internal prep | TIMELINE: Week 1
+ACTION: First meeting with VP Cloud Security via AWS introduction — PCI-DSS 4.0 AI angle | STAKEHOLDER: Linda Rossetti, VP Cloud Security | TIMELINE: Week 2
+ACTION: Deliver PCI-DSS 4.0 compliance briefing to Chief Compliance Officer | STAKEHOLDER: Jim McCarthy, Chief Compliance Officer | TIMELINE: Week 3
+ACTION: Conduct discovery on AI fraud detection data footprint and cardholder data gaps | STAKEHOLDER: Mark Nelsen, SVP Risk and Identity | TIMELINE: Week 3
+ACTION: Engage Chief Risk Officer on quantified PCI non-compliance risk exposure | STAKEHOLDER: Paul Fabara, Chief Risk Officer | TIMELINE: Week 4
+ACTION: Submit formal evaluation proposal and POV scoping | STAKEHOLDER: Linda Rossetti and Paul Fabara | TIMELINE: Week 5
+ACTION: Execute POV on cardholder data environments and AI workload classification | STAKEHOLDER: Mark Nelsen and Linda Rossetti | TIMELINE: Weeks 6-7`,
+
+  'Chevron Corporation_overview':`Executive Summary
+Chevron's OT/IT convergence initiative is moving sensitive operational data into cloud environments without a classification or access governance layer. The CIO cloud-first mandate is accelerating the exposure window and the CISO has visibility into the governance gap. This is cold outbound but the operational and regulatory risk narrative is directly tied to a board-visible initiative.
+
+Point of View
+Chevron's digital oilfield and smart grid initiatives are generating a new category of data governance challenge. Operational technology data that used to live in closed OT networks is now moving into cloud environments for analytics and AI applications — and the security controls that protected it in the OT environment do not follow it into the cloud. The question I want to explore with your security team is whether you have complete visibility into where your most sensitive operational data is landing across that environment today, and whether it is classified and governed to the standard your board expects.`,
+
+  'Chevron Corporation_stakeholders':`NAME: Mike Wirth | TITLE: Chairman and CEO | DEPT: Executive | STANCE: Neutral | ACTION: Board context only — OT/IT governance has C-suite visibility
+NAME: Christopher Lutnick | TITLE: Chief Information Security Officer | DEPT: Security | STANCE: Neutral | ACTION: Primary Economic Buyer — cold outreach with OT/IT convergence angle
+NAME: Mark Nelson | TITLE: EVP Technology | DEPT: Technology | STANCE: Neutral | ACTION: Cloud-first mandate owner — key sponsor for data governance initiative
+NAME: Pierre Breber | TITLE: Chief Financial Officer | DEPT: Finance | STANCE: Neutral | ACTION: Economic buyer context — OT data governance has board-level risk visibility
+NAME: James Johnson | TITLE: VP OT Security | DEPT: OT Security | STANCE: Supporter | ACTION: Technical champion — OT data in cloud environments discovery meeting
+NAME: Lisa Davis | TITLE: Head of Cloud Security | DEPT: Security | STANCE: Supporter | ACTION: Agentless deployment POV initiation — technical evaluation contact`,
+
+  'Chevron Corporation_businesscase':`CURRENT STATE
+- OT/IT convergence is moving operational data including production controls and sensor data into cloud environments for analytics
+- Legacy OT security tools protect data in closed networks but have no visibility into cloud-migrated operational data
+- CIO cloud-first mandate is accelerating migration pace faster than security controls can follow
+BUSINESS IMPACT
+- Unclassified operational data in cloud creates regulatory exposure under NERC CIP and TSA security directives
+- A breach of unclassified operational data representing grid topology or production systems triggers mandatory disclosure and disruption
+- OT data governance gap creates board-level risk — CIO mandate requires security sign-off before next migration phase
+FUTURE STATE
+- Complete visibility into all sensitive operational data across Chevron's cloud and OT/IT convergence environment within 72 hours
+- CISO provides security sign-off for next phase of CIO cloud migration with classified data governance baseline in place
+- Continuous classification ensures OT data moving to cloud retains appropriate access controls and audit trails`,
+
+  'Chevron Corporation_pursuit':`ACTION: Research Chevron OT/IT convergence initiatives and identify CISO contact | STAKEHOLDER: Alex Rivera internal prep | TIMELINE: Week 1
+ACTION: Send CISO cold outreach email using OT/IT convergence data governance angle | STAKEHOLDER: Christopher Lutnick, CISO | TIMELINE: Week 1
+ACTION: Pursue warm introduction via energy sector partner or industry event | STAKEHOLDER: James Johnson, VP OT Security | TIMELINE: Week 2
+ACTION: Follow up CISO cold outreach with OT data governance benchmark report | STAKEHOLDER: Christopher Lutnick, CISO | TIMELINE: Week 2
+ACTION: Request RD executive sponsorship for Chevron first meeting | STAKEHOLDER: Alex Rivera and Regional Director | TIMELINE: Week 3
+ACTION: First meeting with CISO — OT/IT convergence risk and Cyera governance approach | STAKEHOLDER: Christopher Lutnick, CISO | TIMELINE: Week 4
+ACTION: Technical discovery with VP OT Security on cloud migration data flows | STAKEHOLDER: James Johnson, VP OT Security | TIMELINE: Week 5
+ACTION: Present formal POV proposal scoped to OT/IT convergence environment | STAKEHOLDER: Christopher Lutnick, CISO | TIMELINE: Week 6`,
+
+};
+
+// ─── PRE-ENRICHED ACCOUNT DATA (ALEX RIVERA DEMO) ────────────────────────────
+
+const PRE_ENRICHED = {
+  'Salesforce': `Business Overview: Salesforce is the world's leading CRM platform generating $35B in annual revenue through cloud-based sales, service, marketing, and analytics software.
+
+Strategic Priorities:
+- Expanding Agentforce agentic AI across enterprise client workflows
+- Maintaining trust and compliance leadership in the enterprise market
+- Growing Data Cloud as a unified customer data platform
+
+Trigger Hypothesis: Agentforce production expansion is blocked by the CISO until a data classification and governance layer is in place across CRM data. This is a board-level deadline with direct revenue implications.
+
+Economic Buyer Target: CISO — controls data security platform decisions. CDO is secondary stakeholder for Data Cloud governance.
+
+First Outreach Angle: Lead with the Agentforce governance gap — the CISO needs a classification layer before approving production expansion. Frame as enabling AI safely rather than adding security overhead.`,
+
+  'Wells Fargo': `Business Overview: Wells Fargo is a leading US financial institution with $82B in revenue providing banking, investment, mortgage, and consumer finance services.
+
+Strategic Priorities:
+- Satisfying OCC consent order requirements for data governance
+- Accelerating cloud modernization across banking infrastructure
+- Reducing operational risk and compliance exposure
+
+Trigger Hypothesis: OCC consent order explicitly requires enhanced data governance across cloud environments. Legacy DLP has been flagged as insufficient. CDO has a funded mandate to remediate by Q4.
+
+Economic Buyer Target: CDO — owns the data governance mandate and remediation budget. CISO is key technical stakeholder.
+
+First Outreach Angle: Lead with the OCC consent order requirement — this is a funded, time-bound compliance initiative Cyera directly addresses.`,
+
+  'McKesson Corporation': `Business Overview: McKesson is the largest US healthcare distributor with $264B in revenue providing pharmaceutical distribution, medical supplies, and healthcare technology solutions.
+
+Strategic Priorities:
+- Post-divestiture IT separation and cloud migration
+- HIPAA compliance modernization across separated entities
+- AI-assisted supply chain optimization
+
+Trigger Hypothesis: Post-divestiture cloud migration has created unclassified PHI across separated infrastructure. Internal audit confirmed HIPAA exposure requiring remediation.
+
+Economic Buyer Target: CISO — owns the HIPAA remediation mandate. Chief Privacy Officer is secondary stakeholder.
+
+First Outreach Angle: Lead with the confirmed audit finding — a documented HIPAA exposure from the divestiture migration creates regulatory urgency that justifies immediate evaluation.`,
+
+  'Visa Inc.': `Business Overview: Visa is a global payments technology company with $33B in revenue operating the world's largest retail electronic payments network.
+
+Strategic Priorities:
+- PCI-DSS 4.0 compliance readiness across all payment processing environments
+- Expanding AI in fraud detection and risk management
+- Securing real-time payment infrastructure globally
+
+Trigger Hypothesis: PCI-DSS 4.0 deadline requires classification controls on cardholder data processed by AI fraud detection models. Current classification layer does not extend to AI workloads.
+
+Economic Buyer Target: CISO — owns PCI compliance and AI security. Chief Risk Officer is key influencer.
+
+First Outreach Angle: Lead with PCI-DSS 4.0 and AI — the intersection of cardholder data and agentic AI models is a new compliance frontier Cyera addresses directly.`,
+
+  'Chevron Corporation': `Business Overview: Chevron is a global energy company with $235B in revenue engaged in oil and gas exploration, production, refining, and renewable energy development.
+
+Strategic Priorities:
+- OT/IT convergence for smart grid and digital oilfield initiatives
+- Cloud migration of operational systems and analytics
+- Energy transition data governance and compliance
+
+Trigger Hypothesis: OT/IT convergence is moving sensitive operational data into cloud environments without a classification or access governance layer. CIO cloud-first mandate is accelerating the exposure window.
+
+Economic Buyer Target: CISO — owns OT security and cloud data governance. VP of Digital and Technology is key sponsor.
+
+First Outreach Angle: Lead with OT/IT convergence risk — operational data moving to cloud creates a governance gap that legacy OT security tools cannot address.`,
+
+  'Gap Inc.': `Business Overview: Gap Inc is a global retail company with $15B in revenue operating Gap, Banana Republic, Old Navy, and Athleta brands across physical and digital channels.
+
+Strategic Priorities:
+- Digital commerce expansion and customer data platform modernization
+- CCPA compliance for customer PII in cloud environments
+- Personalization AI initiatives requiring customer data access
+
+Trigger Hypothesis: Cloud migration of customer PII to support digital commerce has created a CCPA compliance gap. Legal flagged the exposure in Q1. CDO has a remediation mandate.
+
+Economic Buyer Target: Chief Privacy Officer — owns CCPA compliance. CDO is key sponsor.
+
+First Outreach Angle: Lead with CCPA and digital commerce — customer data moving to cloud for personalization creates the exact classification gap CCPA enforcement targets.`,
+
+  'Levi Strauss & Co.': `Business Overview: Levi Strauss is a global apparel company with $6B in revenue selling jeanswear and apparel across 110 countries through wholesale, retail, and e-commerce channels.
+
+Strategic Priorities:
+- Global digital commerce expansion across international markets
+- GDPR and CCPA compliance for cross-border customer data
+- Supply chain data modernization and visibility
+
+Trigger Hypothesis: Global expansion has created cross-border data residency obligations under GDPR across EU operations. CDO hired Q2 with a mandate to establish a unified data governance baseline.
+
+Economic Buyer Target: CDO — owns the governance mandate. Chief Privacy Officer is key compliance stakeholder.
+
+First Outreach Angle: Lead with global data residency — international expansion creates GDPR obligations that require a classification layer Levi's does not currently have.`,
+
+  'Intel Corporation': `Business Overview: Intel is a global semiconductor company with $54B in revenue designing and manufacturing processors, chipsets, and AI accelerators for data centers, PCs, and edge devices.
+
+Strategic Priorities:
+- Protecting semiconductor design IP across cloud R&D environments
+- AI accelerator market leadership and new product development
+- Restructuring and operational cost reduction
+
+Trigger Hypothesis: Semiconductor IP protection mandate following industry-wide IP theft incidents. CISO is evaluating DSPM for design data across multi-cloud development environments shared with global engineering teams.
+
+Economic Buyer Target: CISO — owns IP protection mandate. Chief IP Counsel is key influencer for design data governance.
+
+First Outreach Angle: Lead with semiconductor IP protection — cloud-based chip design environments create a data governance gap that traditional DLP was not built to address.`,
+};
+
+// ─── PRE-GENERATED TERRITORY PLAN (ALEX RIVERA DEMO) ─────────────────────────
+
+const PRE_GENERATED_PLAN = `TERRITORY THESIS
+- Five of eight accounts have active AI production initiatives without a visible data classification or governance layer — the exact board-level risk condition Cyera resolves
+- Three accounts face active regulatory pressure with classification gaps confirmed in recent audits or consent orders
+
+TIER 1 ACCOUNTS
+- Salesforce — Agentforce blocked by CISO pending data governance layer — Warm
+- Wells Fargo — OCC consent order requires classification remediation by Q4 — Partner
+- McKesson Corporation — HIPAA exposure confirmed in post-divestiture audit — Cold
+- Visa Inc. — PCI-DSS 4.0 deadline on AI fraud detection data — Warm
+- Chevron Corporation — OT/IT convergence exposing operational data in cloud — Cold
+
+TIER 2 ACCOUNTS
+- Gap Inc. — CCPA gap from digital commerce cloud migration — Cold
+- Levi Strauss & Co. — GDPR obligations from global expansion, new CDO — Partner
+
+TIER 3 ACCOUNTS
+- Intel Corporation — IP protection mandate, CISO evaluating, longer cycle — Cold
+
+PURSUIT MOTION
+- Tier 1: Lead with account-specific regulatory or AI trigger, target CISO or CDO, use warm paths at Salesforce and Visa first
+- Tier 2: Value-led nurture with regulatory insights, build CDO and Privacy Officer relationships, monitor for elevation triggers
+- Tier 3: Light touch via industry events and content, monitor earnings calls for trigger signals
+
+ECOSYSTEM STRATEGY
+- Deloitte: Co-sponsor executive briefing at McKesson via managing director relationship
+- AWS Alliance: Warm introduction to Visa CISO through alliance team contact
+- Palo Alto Networks: Explore co-sell motion at Chevron where Palo Alto has existing security relationship
+- KPMG: Financial services practice relationship for Wells Fargo CDO access
+
+30 DAY MILESTONES
+- Confirm CISO introduction at Salesforce via Sara Chen champion relationship
+- Activate Deloitte co-sponsor for McKesson executive briefing
+- First outreach to Visa CISO via AWS alliance contact
+- Submit Wells Fargo CDO meeting request through Deloitte financial services partner
+
+60 DAY MILESTONES
+- Complete discovery meeting with Salesforce CISO — confirm Agentforce governance budget
+- McKesson executive briefing delivered with Deloitte co-sponsor
+- Visa CISO first meeting completed — PCI-DSS 4.0 and AI fraud detection discovery
+- Wells Fargo CDO meeting completed — OCC consent order scope confirmed
+
+90 DAY MILESTONES
+- Salesforce: Business case presented, POC scope agreed
+- Wells Fargo: Formal evaluation initiated, procurement process identified
+- McKesson: Champion identified, technical discovery completed
+- Visa: Second meeting with broader security team scheduled
+- Pipeline at or above 3.5x coverage target
+
+KEY RISKS
+- Cold access at McKesson and Chevron — no warm path confirmed, partner activation is critical
+- Visa PCI-DSS timeline may compress evaluation window — must move quickly after first meeting
+- Intel cycle length may extend beyond current quarter — monitor for elevated trigger signal`;
+
+// ─── PRE-ENRICHED ACCOUNT DATA (MORGAN LEE) ──────────────────────────────────
+
+const PRE_ENRICHED_MORGAN = {
+  'Applied Materials': `Business Overview: Applied Materials is the world's largest semiconductor equipment company with $27B in revenue, supplying critical deposition, etch, and metrology systems to every major chipmaker globally.
+
+Strategic Priorities:
+- Protecting AI-assisted chip design IP across multi-cloud R&D environments
+- Maintaining competitive advantage in advanced process technology
+- Securing collaboration environments for global engineering teams
+
+Trigger Hypothesis: Board IP protection mandate following state-sponsored theft incidents. AI-assisted chip design workflows generating sensitive process IP across AWS, Azure, and GCP with no automated classification layer.
+
+Economic Buyer Target: CISO — owns the IP protection mandate. Chief IP Counsel is co-sponsor for design data governance.
+
+First Outreach Angle: Lead with IP protection and AI design workflows — the data generated by AI chip design tools is your most sensitive IP and it lives in cloud environments traditional DLP was not built to govern.`,
+
+  'Gilead Sciences': `Business Overview: Gilead Sciences is a leading biopharmaceutical company with $27B in revenue focused on antiviral therapies and oncology treatments with major AI drug discovery programs.
+
+Strategic Priorities:
+- FDA 21 CFR Part 11 compliance for AI-assisted drug discovery workflows
+- Accelerating clinical trial data governance for next-gen therapies
+- Protecting proprietary compound research and patient data in cloud environments
+
+Trigger Hypothesis: AI drug discovery workflows accessing unclassified patient data at scale. FDA inspection cycle approaching — current classification approach cannot satisfy 21 CFR Part 11 audit trail requirements for cloud-native AI data.
+
+Economic Buyer Target: Chief Compliance Officer — owns FDA compliance. CISO is technical evaluator. KPMG compliance relationship provides warm entry.
+
+First Outreach Angle: Lead with FDA 21 CFR Part 11 and AI drug discovery — regulated data in cloud AI environments is the exact gap FDA inspectors are targeting in current inspection cycles.`,
+
+  'Lam Research': `Business Overview: Lam Research is a leading semiconductor equipment manufacturer with $17B in revenue providing etch and deposition systems critical to advanced chip manufacturing.
+
+Strategic Priorities:
+- Protecting process recipe IP from insider threats and state-sponsored actors
+- Managing talent mobility risks as engineers move to competitors
+- Securing cloud R&D collaboration for advanced node development
+
+Trigger Hypothesis: Talent mobility incidents where departing engineers accessed sensitive process recipes in cloud environments. CISO evaluating data governance solutions to close the gap.
+
+Economic Buyer Target: CISO — driven by talent mobility incidents and board IP protection mandate. Chief IP Counsel is key stakeholder.
+
+First Outreach Angle: Lead with talent mobility and process IP — departing engineers accessing unclassified design data is the most acute risk at semiconductor equipment companies right now.`,
+
+  'NetApp': `Business Overview: NetApp is a cloud data services and storage infrastructure company with $6B in revenue helping enterprises manage data across hybrid and multi-cloud environments.
+
+Strategic Priorities:
+- Winning the hybrid cloud data management market
+- Demonstrating data governance capabilities to enterprise customers
+- Modernizing internal data security posture to match product messaging
+
+Trigger Hypothesis: Varonis contract renewal approaching with CISO actively dissatisfied with agent overhead and limited SaaS connector coverage. Insight Enterprises has offered a warm introduction to the CISO.
+
+Economic Buyer Target: CISO — owns the Varonis renewal decision. VP of IT is technical evaluator. Insight Enterprises partner contact provides warm access.
+
+First Outreach Angle: Lead with the Varonis replacement narrative — agent overhead and cloud coverage limitations are the two most common failure modes at renewal. Cyera solves both.`,
+
+  'Franklin Templeton': `Business Overview: Franklin Templeton is a leading global investment management company with $9B in revenue managing $1.5T in assets across equity, fixed income, and alternative strategies.
+
+Strategic Priorities:
+- SEC marketing rule compliance for AI-generated investment research content
+- Protecting client data and proprietary investment strategies in cloud environments
+- Modernizing data governance for AI-assisted portfolio management tools
+
+Trigger Hypothesis: SEC marketing rule requires firms to maintain records and access controls on AI-generated content used in client communications. AI investment research tools are generating unclassified sensitive client information without adequate governance.
+
+Economic Buyer Target: Chief Compliance Officer — owns SEC compliance. CDO is key stakeholder. Warm access path confirmed through partner contact.
+
+First Outreach Angle: Lead with SEC marketing rule and AI investment research — the compliance gap between AI-generated content and record-keeping requirements is exactly where SEC examiners are focusing.`,
+
+  'Seagate Technology': `Business Overview: Seagate Technology is a leading hard disk drive and data storage manufacturer with $7B in revenue selling to hyperscalers, enterprises, and consumer markets globally.
+
+Strategic Priorities:
+- Managing data residency obligations across 30+ country manufacturing footprint
+- Integrating recently acquired data environments with unified governance standards
+- Protecting manufacturing IP and supply chain data in cloud environments
+
+Trigger Hypothesis: Recent acquisition creating unclassified data environments, plus data residency obligations across global manufacturing operations spanning 30+ countries.
+
+Economic Buyer Target: CISO — owns global data security and acquisition integration. VP of Legal is key stakeholder for data residency compliance.
+
+First Outreach Angle: Lead with acquisition integration and data residency — newly integrated environments with unclassified data and cross-border transfer obligations are the highest-risk period in a company's data governance lifecycle.`,
+
+  'Bio-Rad Laboratories': `Business Overview: Bio-Rad Laboratories is a life sciences company with $3B in revenue providing laboratory instruments, reagents, and clinical diagnostics subject to FDA and ISO 13485 regulations.
+
+Strategic Priorities:
+- ISO 13485 and FDA data integrity compliance for medical device software
+- Protecting proprietary assay and instrument design data in cloud environments
+- Modernizing legacy DLP that cannot classify cloud-native research data
+
+Trigger Hypothesis: ISO 13485 audit findings identified gaps in electronic record integrity and access controls for cloud-based instrument design data. Legacy DLP flagged as unable to classify sensitive research data stored in cloud platforms.
+
+Economic Buyer Target: VP of Quality and Compliance — owns ISO 13485 and FDA compliance. CISO is technical evaluator.
+
+First Outreach Angle: Lead with ISO 13485 audit findings and cloud data integrity — FDA and ISO inspectors are increasingly focused on electronic record governance in cloud environments for device manufacturers.`,
+
+  'Sanmina Corporation': `Business Overview: Sanmina Corporation is a leading electronics manufacturing services company with $9B in revenue producing printed circuit boards and defense electronics for commercial and government customers.
+
+Strategic Priorities:
+- CMMC compliance for defense contract electronics manufacturing
+- Protecting defense customer IP and controlled unclassified information
+- Separating commercial and defense data environments to meet regulatory requirements
+
+Trigger Hypothesis: Defense contract work requires CMMC compliance for handling Controlled Unclassified Information. Current data classification approach cannot demonstrate the required data handling and access controls to retain defense contracts.
+
+Economic Buyer Target: CISO — owns CMMC compliance program and defense contract security requirements.
+
+First Outreach Angle: Lead with CMMC and CUI handling — defense contract manufacturers are under intense pressure to demonstrate classification and access controls, and the certification timeline is compressing.`,
+};
+
+// ─── PRE-ENRICHED ACCOUNT DATA (TAYLOR BROOKS) ───────────────────────────────
+
+const PRE_ENRICHED_TAYLOR = {
+  'PG&E Corporation': `Business Overview: PG&E Corporation is California's largest utility providing electric and natural gas service to 16 million customers across 70,000 square miles, operating under intense regulatory oversight.
+
+Strategic Priorities:
+- NERC CIP compliance baseline by Q2 with CISO mandate
+- OT/IT convergence for grid modernization with AI-assisted operations
+- Demonstrating cybersecurity posture improvement to CPUC following reliability incidents
+
+Trigger Hypothesis: CISO mandated to establish a data security posture baseline by Q2 under NERC CIP. OT/IT convergence is moving grid management data into cloud environments without a corresponding classification layer.
+
+Economic Buyer Target: CISO — owns the NERC CIP mandate. VP of Grid Operations is key stakeholder for OT/IT convergence data.
+
+First Outreach Angle: Lead with NERC CIP and the Q2 deadline — a mandated compliance baseline with a regulatory deadline and CPUC oversight is exactly the urgency profile where Cyera creates immediate value.`,
+
+  'Intuitive Surgical': `Business Overview: Intuitive Surgical is the market leader in robotic-assisted surgery with $7B in revenue and the da Vinci surgical system used in millions of procedures annually worldwide.
+
+Strategic Priorities:
+- FDA premarket submission data governance for AI surgical planning tools
+- Protecting proprietary surgical robotics design and algorithm IP in cloud
+- Governing patient data from connected surgical systems at scale
+
+Trigger Hypothesis: AI surgical planning data processed across cloud environments without classification or audit trail. FDA premarket submission requirements for AI/ML-based medical devices require demonstration of data governance and access controls.
+
+Economic Buyer Target: CISO — owns surgical data security and FDA compliance coordination. VP of Regulatory Affairs is key influencer.
+
+First Outreach Angle: Lead with FDA AI/ML device guidance and surgical data governance — FDA's new guidance on AI/ML-based software as a medical device specifically requires classification and access controls that most device companies cannot yet demonstrate.`,
+
+  'First Republic Bank': `Business Overview: First Republic Bank is a premium private banking institution with $13B in revenue serving high-net-worth individuals and businesses in a complex regulatory environment following recent acquisition integration.
+
+Strategic Priorities:
+- OCC data governance requirements following acquisition integration
+- Unifying data classification across merged cloud environments
+- Maintaining premium client data security standard through integration period
+
+Trigger Hypothesis: CDO mandate to unify data classification across merged cloud environments following acquisition. OCC data governance requirements apply to the combined entity with elevated scrutiny during integration.
+
+Economic Buyer Target: CDO — owns the integration data governance mandate. CISO is technical stakeholder. Partner contact provides warm access.
+
+First Outreach Angle: Lead with acquisition integration and OCC requirements — the window between acquisition close and regulatory examination is exactly when data governance gaps are most exposed and most urgent to close.`,
+
+  'Varian Medical Systems': `Business Overview: Varian Medical Systems is a leader in radiation oncology treatment systems and software with $3B in revenue, now operating as a Siemens Healthineers business unit.
+
+Strategic Priorities:
+- Post-acquisition security posture alignment with Siemens Healthineers standards
+- HIPAA compliance for PHI in radiation oncology platforms and clinical AI tools
+- Protecting proprietary treatment planning algorithm IP in cloud environments
+
+Trigger Hypothesis: Siemens integration creating PHI governance gap across radiation oncology platforms. Post-acquisition security review flagged unclassified patient data in treatment planning systems that Siemens enterprise security standards require remediation of.
+
+Economic Buyer Target: CISO — owns the post-acquisition security alignment mandate. Chief Privacy Officer is key stakeholder for PHI governance.
+
+First Outreach Angle: Lead with Siemens integration and PHI governance — post-acquisition security reviews consistently surface data classification gaps that the acquirer's standards require remediation of.`,
+
+  'RH (Restoration Hardware)': `Business Overview: RH (Restoration Hardware) is a luxury home furnishings retailer with $4B in revenue expanding internationally across Europe and the UK with a distinctive gallery retail model.
+
+Strategic Priorities:
+- International expansion creating GDPR and EU data protection obligations
+- CTO-initiated vendor evaluation for data classification across e-commerce platform
+- Protecting customer relationship data and design IP across cloud retail systems
+
+Trigger Hypothesis: International expansion into European markets creating GDPR obligations for customer PII in e-commerce and CRM platforms. CTO has initiated a vendor evaluation for data classification with no current solution in place.
+
+Economic Buyer Target: CTO — owns the data classification initiative. Chief Privacy Officer is key stakeholder for GDPR compliance.
+
+First Outreach Angle: Lead with GDPR and international expansion — retail companies expanding into Europe face immediate data residency and classification requirements that most e-commerce platforms were not built to address.`,
+
+  'Del Monte Foods': `Business Overview: Del Monte Foods is a leading producer of canned fruits, vegetables, and tomato products with $2B in revenue expanding its direct-to-consumer digital platform and consumer data capabilities.
+
+Strategic Priorities:
+- CCPA compliance for consumer PII generated by direct-to-consumer digital platform
+- Governing marketing cloud data for personalization and loyalty programs
+- Protecting proprietary recipe and product development data in cloud environments
+
+Trigger Hypothesis: Direct-to-consumer digital platform generating unclassified consumer PII for marketing and personalization. CCPA compliance requirements apply and current marketing cloud generates personal data without a classification layer.
+
+Economic Buyer Target: Chief Privacy Officer — owns CCPA compliance. CMO is key stakeholder for marketing data governance.
+
+First Outreach Angle: Lead with CCPA and direct-to-consumer data — consumer goods companies building DTC platforms are generating personal data at scale without the governance infrastructure their larger retail peers have built.`,
+
+  'Clif Bar & Company': `Business Overview: Clif Bar is a leading organic energy bar company with $1B in revenue and a strong B-Corp certification commitment to sustainability, ingredient transparency, and supply chain ethics.
+
+Strategic Priorities:
+- B-Corp data transparency requirements for supply chain sustainability reporting
+- CCPA compliance for athlete ambassador and consumer engagement data
+- Protecting proprietary formulation and ingredient sourcing data in cloud environments
+
+Trigger Hypothesis: B-Corp certification data transparency requirements necessitate governance over supply chain sustainability data. Consumer engagement platform generating CCPA-covered personal data without classification layer.
+
+Economic Buyer Target: Chief Sustainability Officer — owns B-Corp compliance and data transparency. CISO is technical evaluator.
+
+First Outreach Angle: Lead with B-Corp transparency requirements and supply chain data — B-Corp certified companies face unique data governance requirements where transparency about data practices is part of the certification standard.`,
+
+  'Elanco Animal Health': `Business Overview: Elanco Animal Health is a leading veterinary pharmaceutical company with $5B in revenue following the acquisition of Bayer Animal Health, providing treatments for pets and livestock globally.
+
+Strategic Priorities:
+- Post-acquisition integration of Bayer Animal Health data environments
+- FDA and EU veterinary pharmaceutical regulatory compliance
+- Protecting proprietary compound research and clinical trial data in cloud environments
+
+Trigger Hypothesis: Post-Bayer acquisition integrating unclassified research and clinical data environments with different governance standards. FDA veterinary data integrity requirements and EU Good Laboratory Practice standards apply to the combined entity.
+
+Economic Buyer Target: CISO — owns post-acquisition security integration. Chief Regulatory Officer is key stakeholder for FDA and EU compliance.
+
+First Outreach Angle: Lead with acquisition integration and FDA veterinary data governance — the same post-acquisition classification gap that affected McKesson in pharma is active at Elanco in animal health.`,
+};
+
+// ─── PRE-GENERATED TERRITORY PLANS (MORGAN LEE / TAYLOR BROOKS) ──────────────
+
+const PRE_GENERATED_PLAN_MORGAN = `TERRITORY THESIS
+- Territory centers on semiconductor IP protection and life sciences regulatory compliance as the two dominant urgency drivers across Tier 1 accounts
+- Varonis renewal at NetApp is the fastest near-term qualified opportunity with confirmed CISO dissatisfaction and warm partner access
+
+TIER 1 ACCOUNTS
+- Applied Materials — Board IP mandate, AI chip design in cloud, warm CISO contact — Warm
+- Gilead Sciences — FDA 21 CFR Part 11, AI drug discovery data in cloud — Partner
+- Lam Research — Talent mobility IP incidents, CISO evaluating DSPM — Cold
+- NetApp — Varonis renewal, CISO dissatisfied with coverage, Insight warm intro — Partner
+
+TIER 2 ACCOUNTS
+- Franklin Templeton — SEC marketing rule, AI investment research data ungoverned — Warm
+- Seagate Technology — Acquisition integration, 30-country data residency obligations — Cold
+- Bio-Rad Laboratories — ISO 13485 audit findings, legacy DLP gap in cloud — Cold
+
+TIER 3 ACCOUNTS
+- Sanmina Corporation — CMMC defense contract requirements, longer cycle — Cold
+
+PURSUIT MOTION
+- Tier 1: Simultaneous pursuit of NetApp (fastest close), Applied Materials (warmest access), Gilead via KPMG
+- Tier 2: Nurture Franklin Templeton via warm contact, watch Bio-Rad audit timeline for trigger
+- Tier 3: Monitor Sanmina for CMMC certification timeline escalation
+
+ECOSYSTEM STRATEGY
+- Insight Enterprises: Warm NetApp CISO introduction — activate immediately
+- KPMG: Life sciences compliance practice for Gilead CCO co-sponsorship
+- Industry Events: RSA and Black Hat semiconductor security sessions for Lam cold outreach
+
+30 DAY MILESTONES
+- NetApp: CISO introductory meeting via Insight Enterprises warm introduction
+- Applied Materials: First CISO meeting confirmed through warm contact
+- Gilead: KPMG compliance partner briefed and co-sponsorship initiated
+- Lam Research: Cold outreach sequence launched with IP protection angle
+
+60 DAY MILESTONES
+- NetApp: Displacement proposal and TCO analysis delivered to CISO
+- Applied Materials: POV proposal submitted to CISO and Chief IP Counsel
+- Gilead: CCO introductory meeting completed via KPMG co-sponsorship
+- Franklin Templeton: Discovery call completed via warm contact
+
+90 DAY MILESTONES
+- NetApp: Commercial terms negotiated or competitive deal closed
+- Applied Materials: POV in progress, commercial conversation initiated
+- Gilead: Formal evaluation proposal submitted to CCO
+- Pipeline at or above 3.5x coverage target
+
+KEY RISKS
+- NetApp CISO may extend Varonis even with dissatisfaction — procurement inertia risk, must accelerate timeline
+- Lam Research cold access is a single point of failure — industry event connection or mutual contact needed
+- Bio-Rad ISO audit timeline uncertain — monitor for escalation trigger`;
+
+const PRE_GENERATED_PLAN_TAYLOR = `TERRITORY THESIS
+- Territory has real regulatory triggers but pipeline coverage is significantly below target — requires converting 2 Tier 1 accounts to qualified opportunities in next 45 days
+- Intuitive Surgical warm contact is the fastest path to a first meeting; PG&E is highest urgency due to NERC CIP deadline
+
+TIER 1 ACCOUNTS
+- PG&E Corporation — NERC CIP Q2 deadline, CISO mandate, OT/IT convergence — Cold
+- Intuitive Surgical — FDA AI/ML device guidance, AI surgical data, warm contact — Warm
+
+TIER 2 ACCOUNTS
+- First Republic Bank — OCC integration requirements, CDO mandate, partner access — Partner
+- Varian Medical Systems — Siemens PHI gap post-acquisition, security review flagged — Cold
+- RH Restoration Hardware — GDPR international expansion, CTO evaluation — Cold
+
+TIER 3 ACCOUNTS
+- Del Monte Foods — CCPA DTC platform, consumer data ungoverned — Cold
+- Clif Bar & Company — B-Corp transparency requirements, longer sales cycle — Cold
+- Elanco Animal Health — FDA veterinary data, acquisition integration — Cold
+
+PURSUIT MOTION
+- Tier 1: Intuitive Surgical first (warm access), PG&E via PAX partnership, executive sponsorship required
+- Coverage gap requires 2 new qualified opportunities in 45 days — focus all resources on Tier 1
+- Tier 2 and 3 on hold until Tier 1 pipeline established
+
+ECOSYSTEM STRATEGY
+- Palo Alto Networks: Alliance team for PG&E CISO introduction — activate immediately
+- Partner Contact: First Republic CDO introduction — confirm and activate this week
+- Taylor's network: Identify warm connections to Varian or Intuitive security teams
+
+30 DAY MILESTONES
+- Intuitive Surgical: First CISO meeting via warm security contact
+- PG&E: Activate PAX alliance introduction — cold outreach sequence launched
+- First Republic: Partner contact briefed and CDO introduction requested
+- Regional Director: Executive sponsorship requested for PG&E cold outreach
+
+60 DAY MILESTONES
+- Intuitive Surgical: Discovery complete, POV proposal submitted
+- PG&E: First CISO meeting completed via PAX or cold outbound
+- First Republic: CDO introductory meeting completed
+- Varian: Cold outreach sequence launched with Siemens integration angle
+
+90 DAY MILESTONES
+- Intuitive Surgical: POV in progress, commercial conversation initiated
+- PG&E: Formal evaluation initiated if first meeting achieved by Day 60
+- First Republic: Technical discovery underway
+- Pipeline at minimum 2.5x coverage with path to 3.5x
+
+KEY RISKS
+- Pipeline concentration risk — if Intuitive Surgical stalls, no backup Tier 1 warm opportunity
+- PG&E Q2 deadline may pass before first meeting is achieved via cold outbound alone
+- Varian cold access with no partner path — investigate Siemens Healthineers alliance team connection`;
+
+// ─── SIMULATED AI RESPONSES (MORGAN LEE + TAYLOR BROOKS ACCOUNTS) ────────────
+
+const SIMULATED_RESPONSES = {
+  'Applied Materials_overview': `Executive Summary
+Applied Materials has a board-level IP protection mandate and a warm CISO contact actively evaluating DSPM solutions for AI-assisted chip design environments. The vendor evaluation window is open with no incumbent in place for cloud-native classification. This is Morgan's highest-confidence near-term opportunity.
+
+Point of View
+Applied Materials is generating its most sensitive competitive IP — next-generation process technology specifications — in cloud environments designed for collaboration but not for classification. Every engineering team accessing those environments from a new geography or device expands the exposure surface. The question I want to explore with your security team is whether you have the same level of confidence in your design IP governance in the cloud that you had when it lived on-premises.`,
+
+  'Applied Materials_stakeholders': `NAME: Gary Dickerson | TITLE: Chief Executive Officer | DEPT: Executive | STANCE: Neutral | ACTION: Board context — IP protection mandate originates here
+NAME: Prabu Raja | TITLE: Chief Technology Officer | DEPT: Technology | STANCE: Neutral | ACTION: AI chip design environment owner — secondary technical stakeholder
+NAME: Ahmad Khan | TITLE: Chief Information Security Officer | DEPT: Security | STANCE: Supporter | ACTION: Primary Economic Buyer — warm contact, schedule first meeting
+NAME: Dr. Lisa Chen | TITLE: Chief IP Counsel | DEPT: Legal | STANCE: Supporter | ACTION: Co-sponsor for IP protection evaluation — brief on classification approach
+NAME: David Wang | TITLE: VP Cloud Engineering | DEPT: Engineering | STANCE: Neutral | ACTION: Technical evaluator for cloud architecture and deployment model
+NAME: Sarah Mitchell | TITLE: Director, Data Security | DEPT: Security | STANCE: Supporter | ACTION: Day-to-day champion — POC coordination and technical deep-dive`,
+
+  'Applied Materials_businesscase': `CURRENT STATE
+- AI chip design workflows generate process IP across AWS, Azure, and GCP with no automated classification layer
+- Manual classification covers core IP repositories but misses collaboration tools, cloud storage, and engineering SaaS applications
+- Board IP protection mandate followed state-sponsored theft incidents targeting the semiconductor equipment sector
+BUSINESS IMPACT
+- A single breach of next-generation process technology specifications could cost $500M+ in competitive disadvantage
+- Insider threat risk elevated — design engineers have broad access to unclassified IP across cloud environments
+- State-sponsored exfiltration targeting semiconductor IP has increased 40% in the past two years
+FUTURE STATE
+- Complete visibility into all sensitive design data across Applied Materials' multi-cloud estate within 72 hours
+- Process IP classified automatically and continuously with exfiltration controls applied based on sensitivity
+- Board briefed on credible IP protection posture within 30 days of Cyera deployment`,
+
+  'Applied Materials_pursuit': `ACTION: Request introductory meeting with CISO Ahmad Khan through warm contact | STAKEHOLDER: Ahmad Khan, CISO | TIMELINE: Week 1
+ACTION: Brief Chief IP Counsel on Cyera classification approach for design data | STAKEHOLDER: Dr. Lisa Chen, Chief IP Counsel | TIMELINE: Week 2
+ACTION: Deliver IP protection capabilities overview focused on chip design workflows | STAKEHOLDER: Ahmad Khan, CISO | TIMELINE: Week 2
+ACTION: Technical discovery with VP Cloud Engineering on multi-cloud architecture | STAKEHOLDER: David Wang, VP Cloud Engineering | TIMELINE: Week 3
+ACTION: Engage Director of Data Security as technical champion for POC scoping | STAKEHOLDER: Sarah Mitchell, Director Data Security | TIMELINE: Week 3
+ACTION: Submit formal evaluation proposal and POC scope | STAKEHOLDER: Ahmad Khan, CISO | TIMELINE: Week 4
+ACTION: Cyera VP peer meeting with CISO — executive engagement | STAKEHOLDER: Ahmad Khan, CISO | TIMELINE: Week 5
+ACTION: Present POC results and commercial proposal | STAKEHOLDER: Ahmad Khan and Lisa Chen | TIMELINE: Week 7`,
+
+  'Gilead Sciences_overview': `Executive Summary
+Gilead's AI drug discovery workflows are generating and processing regulated patient data at a pace that manual classification cannot track. The FDA 21 CFR Part 11 compliance gap in cloud-based AI research environments is the most acute audit risk in Gilead's current security portfolio. KPMG's compliance relationship provides a warm co-sponsorship path to the Chief Compliance Officer.
+
+Point of View
+The FDA wrote 21 CFR Part 11 before AI drug discovery existed. The challenge you're navigating is that the regulation's requirements — data integrity, access controls, audit trails — apply to every electronic record used in regulated activity, including records generated by AI workflows in cloud environments that weren't designed with those requirements in mind. I'd like to walk through how companies at Gilead's scale are using Cyera to close that gap before the next inspection cycle.`,
+
+  'Gilead Sciences_stakeholders': `NAME: Daniel O'Day | TITLE: Chief Executive Officer | DEPT: Executive | STANCE: Neutral | ACTION: Board context — FDA compliance is a C-suite priority
+NAME: Merdad Parsey | TITLE: Chief Medical Officer | DEPT: Medical | STANCE: Neutral | ACTION: AI drug discovery program owner — secondary stakeholder
+NAME: Aaron Sobel | TITLE: Chief Information Security Officer | DEPT: Security | STANCE: Supporter | ACTION: Technical evaluator for cloud data governance
+NAME: Brett Pletcher | TITLE: Chief Compliance Officer | DEPT: Compliance | STANCE: Supporter | ACTION: Primary Economic Buyer — approach via KPMG compliance relationship
+NAME: Andrew Dickinson | TITLE: Chief Financial Officer | DEPT: Finance | STANCE: Neutral | ACTION: Economic buyer context for compliance investment
+NAME: Maya Singh | TITLE: VP Data Privacy and Compliance | DEPT: Legal | STANCE: Supporter | ACTION: Day-to-day champion for 21 CFR Part 11 remediation`,
+
+  'Gilead Sciences_businesscase': `CURRENT STATE
+- AI drug discovery platform processes patient-derived data and compound research across cloud without automated classification
+- FDA 21 CFR Part 11 requires data integrity, access controls, and audit trails for all regulated electronic records including AI-generated data
+- Manual tagging at point of creation is inconsistent and creates growing backlog as AI generates data faster than humans can classify
+BUSINESS IMPACT
+- FDA inspection finding on unclassified regulated data in AI workflows could result in Form 483 observation or warning letter with drug approval delay implications
+- AI drug discovery competitive advantage threatened — compliance gap could require slowing or halting cloud AI workflows during remediation
+- Each manual classification FTE costs $150K+ annually while producing incomplete coverage
+FUTURE STATE
+- All data in Gilead's drug discovery environment automatically classified with 21 CFR Part 11 controls applied continuously
+- FDA inspection posture defensible with complete audit trail documentation before next inspection cycle
+- AI drug discovery workflows proceed without compliance-driven interruption`,
+
+  'Gilead Sciences_pursuit': `ACTION: Engage KPMG compliance contact to co-sponsor CCO introduction | STAKEHOLDER: KPMG Compliance Partner | TIMELINE: Week 1
+ACTION: Brief Chief Compliance Officer on 21 CFR Part 11 AI workflow gap | STAKEHOLDER: Brett Pletcher, CCO | TIMELINE: Week 2
+ACTION: Technical deep-dive with CISO on cloud data classification architecture | STAKEHOLDER: Aaron Sobel, CISO | TIMELINE: Week 3
+ACTION: Engage VP Data Privacy as day-to-day champion for evaluation | STAKEHOLDER: Maya Singh, VP Data Privacy | TIMELINE: Week 3
+ACTION: Discovery on AI drug discovery data flows and FDA audit trail requirements | STAKEHOLDER: Maya Singh and Aaron Sobel | TIMELINE: Week 4
+ACTION: Submit POV proposal scoped to drug discovery cloud environment | STAKEHOLDER: Brett Pletcher, CCO | TIMELINE: Week 5
+ACTION: Cyera executive sponsor engagement — VP peer meeting with CCO | STAKEHOLDER: Brett Pletcher, CCO | TIMELINE: Week 6
+ACTION: Present POV results and commercial proposal | STAKEHOLDER: Brett Pletcher and Aaron Sobel | TIMELINE: Week 7`,
+
+  'Lam Research_overview': `Executive Summary
+Lam Research has experienced talent mobility incidents where departing engineers accessed sensitive process recipe data in cloud environments, creating a board-level IP protection mandate. The CISO is actively evaluating DSPM solutions with no incumbent in place. Cold access means direct outbound to CISO with the talent mobility angle is the primary path.
+
+Point of View
+Talent mobility in semiconductor equipment has become one of the most acute IP protection challenges in the industry. When engineers move to competitors, the data they accessed in cloud environments doesn't move with them — but the question of what they saw, copied, or exfiltrated is nearly impossible to answer without automated classification and access monitoring. I'd like to show your security team how Cyera answers that question across your cloud R&D environments.`,
+
+  'Lam Research_stakeholders': `NAME: Tim Archer | TITLE: Chief Executive Officer | DEPT: Executive | STANCE: Neutral | ACTION: Board context — IP protection mandate originates at CEO level
+NAME: Patrick Lord | TITLE: Chief Technology Officer | DEPT: Technology | STANCE: Neutral | ACTION: Process recipe IP owner — secondary technical stakeholder
+NAME: Rangesh Raghuraman | TITLE: Chief Information Security Officer | DEPT: Security | STANCE: Supporter | ACTION: Primary Economic Buyer — cold outreach with IP protection angle
+NAME: Sarah Kim | TITLE: VP Legal and IP | DEPT: Legal | STANCE: Supporter | ACTION: Co-Economic Buyer — insider threat and talent mobility IP risk
+NAME: James Park | TITLE: VP Cloud Infrastructure | DEPT: Engineering | STANCE: Neutral | ACTION: Technical evaluator for cloud deployment architecture
+NAME: Rachel Thompson | TITLE: Director, Information Security | DEPT: Security | STANCE: Supporter | ACTION: Day-to-day champion — discovery and POC coordination`,
+
+  'Lam Research_businesscase': `CURRENT STATE
+- Semiconductor process IP and equipment design data stored across cloud R&D environments without automated classification
+- Talent mobility incidents have exposed the gap between data access logging and actual classification governance
+- No visibility into what sensitive IP departing engineers accessed, copied, or potentially exfiltrated
+BUSINESS IMPACT
+- A single leak of next-node process recipe could cost $300M+ in competitive disadvantage with major chipmaker customers
+- State-sponsored IP theft targeting semiconductor equipment companies increased significantly following US export controls
+- Insider threat investigations without classification data take 6-12 months and produce inconclusive results
+FUTURE STATE
+- Complete visibility into all sensitive process IP across Lam's cloud estate within 72 hours of deployment
+- Talent mobility incidents can be investigated with full access history and classification context in hours
+- Exfiltration alerts triggered automatically when sensitive IP moves outside approved boundaries`,
+
+  'Lam Research_pursuit': `ACTION: Send CISO cold outreach focused on talent mobility and IP protection | STAKEHOLDER: Rangesh Raghuraman, CISO | TIMELINE: Week 1
+ACTION: Request introduction through industry event or mutual connection | STAKEHOLDER: Rangesh Raghuraman, CISO | TIMELINE: Week 2
+ACTION: Brief VP Legal on IP protection approach for insider threat and talent mobility | STAKEHOLDER: Sarah Kim, VP Legal and IP | TIMELINE: Week 2
+ACTION: First CISO meeting — talent mobility incidents and cloud IP classification | STAKEHOLDER: Rangesh Raghuraman, CISO | TIMELINE: Week 3
+ACTION: Technical discovery with Director Information Security and VP Cloud Infrastructure | STAKEHOLDER: Rachel Thompson and James Park | TIMELINE: Week 4
+ACTION: Submit POV proposal scoped to R&D cloud environments | STAKEHOLDER: Rangesh Raghuraman, CISO | TIMELINE: Week 5
+ACTION: Cyera executive engagement — VP peer meeting with CISO | STAKEHOLDER: Rangesh Raghuraman, CISO | TIMELINE: Week 6
+ACTION: Present POV results and commercial proposal | STAKEHOLDER: Rangesh Raghuraman and Sarah Kim | TIMELINE: Week 7`,
+
+  'NetApp_overview': `Executive Summary
+NetApp's Varonis renewal represents Morgan's fastest path to a qualified opportunity — the CISO is actively dissatisfied with agent overhead and limited SaaS connector coverage. Insight Enterprises has offered a warm introduction. The positioning window is open and competitive displacement is achievable.
+
+Point of View
+Your Varonis deployment was the right call when most of your data lived on NetApp storage systems you controlled. The world has changed — your data now lives in cloud environments and SaaS applications that Varonis was not designed to govern without significant agent infrastructure overhead. I'd like to show you how Cyera provides the same governance posture across your entire cloud and SaaS estate with none of the agent complexity.`,
+
+  'NetApp_stakeholders': `NAME: George Kurian | TITLE: Chief Executive Officer | DEPT: Executive | STANCE: Neutral | ACTION: Board context only — data security is a product message alignment concern
+NAME: Cesar Cernuda | TITLE: President | DEPT: Operations | STANCE: Neutral | ACTION: Secondary executive stakeholder for platform investment
+NAME: Kathleen Nagel | TITLE: Chief Information Security Officer | DEPT: Security | STANCE: Supporter | ACTION: Primary Economic Buyer — warm introduction via Insight Enterprises
+NAME: Ravi Mohan | TITLE: VP Cloud Security | DEPT: Security | STANCE: Supporter | ACTION: Technical champion — agentless architecture resonates with CISO pain
+NAME: Sandra Liu | TITLE: Chief Information Officer | DEPT: IT | STANCE: Neutral | ACTION: IT infrastructure stakeholder for deployment model discussion
+NAME: Tom Bradley | TITLE: VP Compliance | DEPT: Legal | STANCE: Neutral | ACTION: Secondary context — compliance requirements for SaaS data governance`,
+
+  'NetApp_businesscase': `CURRENT STATE
+- Varonis provides classification coverage for on-premises NetApp storage but has limited visibility into cloud and SaaS environments
+- CISO is dissatisfied with agent overhead required for Varonis cloud coverage — operational burden on engineering team
+- Renewal decision approaching with active evaluation of alternatives
+BUSINESS IMPACT
+- Agent overhead for Varonis cloud coverage costs 2-3 FTE equivalents in operational maintenance annually
+- SaaS coverage gaps mean sensitive data in collaboration platforms, cloud storage, and engineering tools is not governed
+- Competitive differentiation risk — NetApp's enterprise customers expect their own data governance messaging to be credible
+FUTURE STATE
+- Complete cloud and SaaS coverage replacing Varonis with zero agent infrastructure overhead
+- CISO confident in data governance posture across all environments without operational maintenance burden
+- Renewal budget redirected to agentless solution with broader coverage at lower operational cost`,
+
+  'NetApp_pursuit': `ACTION: Engage Insight Enterprises contact to request warm introduction to CISO | STAKEHOLDER: Insight Enterprises Rep and Kathleen Nagel, CISO | TIMELINE: Week 1
+ACTION: Prepare Varonis displacement analysis specific to NetApp's cloud environment | STAKEHOLDER: Morgan Lee internal prep | TIMELINE: Week 1
+ACTION: First CISO meeting via Insight introduction — Varonis replacement positioning | STAKEHOLDER: Kathleen Nagel, CISO | TIMELINE: Week 2
+ACTION: Agentless architecture deep-dive with VP Cloud Security | STAKEHOLDER: Ravi Mohan, VP Cloud Security | TIMELINE: Week 3
+ACTION: Technical comparison — Cyera vs Varonis for SaaS and cloud coverage | STAKEHOLDER: Ravi Mohan and Sandra Liu | TIMELINE: Week 3
+ACTION: Submit displacement proposal with TCO analysis vs Varonis renewal | STAKEHOLDER: Kathleen Nagel, CISO | TIMELINE: Week 4
+ACTION: Cyera VP executive engagement — peer meeting with CISO | STAKEHOLDER: Kathleen Nagel, CISO | TIMELINE: Week 5
+ACTION: Present commercial proposal and contract terms | STAKEHOLDER: Kathleen Nagel and Sandra Liu | TIMELINE: Week 6`,
+
+  'PG&E Corporation_overview': `Executive Summary
+PG&E has a CISO-mandated data security posture baseline required by Q2 under NERC CIP compliance requirements. Grid modernization OT/IT convergence is moving operational data to cloud without a classification layer. Cold access means the Palo Alto Networks alliance team is the primary introduction path.
+
+Point of View
+NERC CIP compliance has always required utilities to protect sensitive operational data — but the grid modernization your team is executing is creating a new category of risk. When OT systems connect to cloud analytics platforms, the classification and access controls that NERC CIP requires have to follow the data into those environments. Most utility CISOs are discovering that their current tools were not built for that world. I'd like to show you how Cyera helps utilities meet NERC CIP requirements in cloud-native OT/IT convergence environments.`,
+
+  'PG&E Corporation_stakeholders': `NAME: Patricia Poppe | TITLE: Chief Executive Officer | DEPT: Executive | STANCE: Neutral | ACTION: Board context — CPUC and NERC CIP compliance are board priorities
+NAME: Jason Wells | TITLE: Chief Financial Officer | DEPT: Finance | STANCE: Neutral | ACTION: Economic buyer context — regulatory remediation has board budget authority
+NAME: Sumeet Singh | TITLE: Chief Information Security Officer | DEPT: Security | STANCE: Neutral | ACTION: Primary Economic Buyer — cold outreach via Palo Alto Networks alliance
+NAME: Alejandro Martinez | TITLE: VP Grid Operations | DEPT: Operations | STANCE: Neutral | ACTION: OT/IT convergence data owner — technical stakeholder for classification scope
+NAME: Rachel Chen | TITLE: Chief Compliance Officer | DEPT: Compliance | STANCE: Supporter | ACTION: NERC CIP compliance mandate owner — regulatory urgency driver
+NAME: David Park | TITLE: VP Cloud Infrastructure | DEPT: Technology | STANCE: Neutral | ACTION: Technical evaluator for cloud deployment architecture`,
+
+  'PG&E Corporation_businesscase': `CURRENT STATE
+- Grid modernization moving OT data including operational controls and grid topology into cloud environments for analytics
+- NERC CIP compliance requires classification and access controls for sensitive operational data in cloud environments
+- CISO-mandated data security posture baseline by Q2 with no vendor selected
+BUSINESS IMPACT
+- NERC CIP non-compliance penalties can reach $1M per violation per day for the most serious findings
+- CPUC oversight following reliability incidents creates additional regulatory dimension — any identified security gap triggers reporting obligations
+- Q2 deadline creates urgency — without a credible baseline, PG&E cannot demonstrate compliance to regulators
+FUTURE STATE
+- Complete NERC CIP-aligned data classification baseline established across cloud and OT/IT convergence environment within 30 days
+- CISO presents defensible compliance posture to FERC and CPUC before Q2 deadline
+- Continuous classification governance prevents recurrence as grid modernization expands`,
+
+  'PG&E Corporation_pursuit': `ACTION: Engage Palo Alto Networks alliance team for PG&E CISO introduction | STAKEHOLDER: PAX Alliance and Sumeet Singh, CISO | TIMELINE: Week 1
+ACTION: Prepare NERC CIP cloud compliance briefing specific to grid modernization | STAKEHOLDER: Taylor Brooks internal prep | TIMELINE: Week 1
+ACTION: Request RD executive sponsorship for PG&E cold outreach | STAKEHOLDER: Taylor Brooks and Regional Director | TIMELINE: Week 1
+ACTION: First CISO meeting via PAX introduction — NERC CIP and Q2 deadline angle | STAKEHOLDER: Sumeet Singh, CISO | TIMELINE: Week 2
+ACTION: Brief Chief Compliance Officer on NERC CIP classification requirements | STAKEHOLDER: Rachel Chen, Chief Compliance Officer | TIMELINE: Week 3
+ACTION: Technical discovery with VP Cloud Infrastructure on OT/IT data flows | STAKEHOLDER: David Park, VP Cloud Infrastructure | TIMELINE: Week 4
+ACTION: Submit POV proposal scoped to NERC CIP cloud compliance baseline | STAKEHOLDER: Sumeet Singh, CISO | TIMELINE: Week 5
+ACTION: Present POV results and commercial proposal with Q2 deployment timeline | STAKEHOLDER: Sumeet Singh and Rachel Chen | TIMELINE: Week 6`,
+
+  'Intuitive Surgical_overview': `Executive Summary
+Intuitive Surgical is processing AI surgical planning data across cloud environments without the data governance controls required for FDA AI/ML-based medical device compliance. Warm security team contact provides a direct path to the CISO. This is Taylor's best near-term qualified opportunity.
+
+Point of View
+The FDA's guidance on AI/ML-based software as a medical device is creating a new data governance requirement for surgical robotics companies. The data your AI planning tools process — patient imaging, surgical parameters, outcomes data — represents regulated electronic records that require classification, access controls, and audit trails in cloud environments. I'd like to show your team how Cyera addresses these requirements without adding operational overhead to your engineering workflows.`,
+
+  'Intuitive Surgical_stakeholders': `NAME: Gary Guthart | TITLE: Chief Executive Officer | DEPT: Executive | STANCE: Neutral | ACTION: Board context — FDA AI/ML device compliance is a C-suite priority
+NAME: Jamie Samath | TITLE: Chief Financial Officer | DEPT: Finance | STANCE: Neutral | ACTION: Economic buyer context for compliance investment
+NAME: Brian Miller | TITLE: Chief Information Security Officer | DEPT: Security | STANCE: Supporter | ACTION: Primary Economic Buyer — warm contact, schedule first meeting
+NAME: Mridul Kaur | TITLE: VP Regulatory Affairs | DEPT: Regulatory | STANCE: Supporter | ACTION: FDA AI/ML guidance owner — key influencer for compliance investment
+NAME: David Chen | TITLE: VP Software Engineering | DEPT: Engineering | STANCE: Neutral | ACTION: Technical stakeholder for AI pipeline data governance
+NAME: Sarah Wong | TITLE: Director, Data Privacy | DEPT: Legal | STANCE: Supporter | ACTION: Day-to-day champion for patient data governance initiative`,
+
+  'Intuitive Surgical_businesscase': `CURRENT STATE
+- AI surgical planning tools process patient imaging and surgical parameter data across cloud without automated classification
+- FDA AI/ML-based medical device guidance requires demonstrating data governance and audit trail for regulated AI inputs
+- Surgical data from connected da Vinci systems accumulates in cloud at scale without classification controls
+BUSINESS IMPACT
+- FDA 510(k) and PMA submissions for next-generation AI features require demonstrating data classification governance
+- A data breach of unclassified patient surgical data creates HIPAA breach notification obligations and reputational risk
+- Regulatory delay on AI feature approvals could impact competitive position in surgical robotics market
+FUTURE STATE
+- Complete classification of surgical AI data across cloud environments within 72 hours of deployment
+- FDA regulatory submissions demonstrate data governance posture aligned with AI/ML device guidance
+- HIPAA compliance for patient data in connected surgical systems established with continuous monitoring`,
+
+  'Intuitive Surgical_pursuit': `ACTION: Contact warm security team contact to request CISO introduction | STAKEHOLDER: Security Team Contact and Brian Miller, CISO | TIMELINE: Week 1
+ACTION: Prepare FDA AI/ML device guidance briefing specific to surgical robotics data | STAKEHOLDER: Taylor Brooks internal prep | TIMELINE: Week 1
+ACTION: First CISO meeting — AI surgical data governance and FDA compliance angle | STAKEHOLDER: Brian Miller, CISO | TIMELINE: Week 2
+ACTION: Engage VP Regulatory Affairs on FDA AI/ML guidance data requirements | STAKEHOLDER: Mridul Kaur, VP Regulatory Affairs | TIMELINE: Week 3
+ACTION: Technical discovery with VP Software Engineering on AI pipeline data flows | STAKEHOLDER: David Chen, VP Software Engineering | TIMELINE: Week 3
+ACTION: Submit POV proposal scoped to AI surgical planning data environment | STAKEHOLDER: Brian Miller, CISO | TIMELINE: Week 4
+ACTION: Cyera executive engagement — VP peer meeting with CISO | STAKEHOLDER: Brian Miller, CISO | TIMELINE: Week 5
+ACTION: Present POV results and commercial proposal | STAKEHOLDER: Brian Miller and Mridul Kaur | TIMELINE: Week 7`,
+
+  'First Republic Bank_overview': `Executive Summary
+First Republic Bank has a CDO-led initiative to unify data classification across merged cloud environments following acquisition, with OCC data governance requirements creating regulatory urgency. Partner access provides a warm path to the CDO.
+
+Point of View
+Post-acquisition data governance is one of the most predictable but least addressed security challenges in financial services. When two environments merge, the sensitive data — client financial records, account data, transaction history — doesn't automatically inherit the classification controls of the acquiring institution. The OCC is watching closely during integration periods. I'd like to show you how Cyera helps banks establish a unified classification posture across merged environments in weeks, not months.`,
+
+  'First Republic Bank_stakeholders': `NAME: Mike Roffler | TITLE: Chief Executive Officer | DEPT: Executive | STANCE: Neutral | ACTION: Board context — OCC compliance is a board priority during integration
+NAME: Bob Thornton | TITLE: Chief Financial Officer | DEPT: Finance | STANCE: Neutral | ACTION: Economic buyer context for compliance investment
+NAME: Angela Chen | TITLE: Chief Data Officer | DEPT: Data and Analytics | STANCE: Supporter | ACTION: Primary Economic Buyer — partner contact provides warm path
+NAME: David Kim | TITLE: Chief Information Security Officer | DEPT: Security | STANCE: Supporter | ACTION: Technical decision maker — OCC and cloud architecture
+NAME: Lisa Park | TITLE: Chief Compliance Officer | DEPT: Compliance | STANCE: Supporter | ACTION: OCC data governance requirement owner — key influencer
+NAME: James Wu | TITLE: VP Cloud Architecture | DEPT: Technology | STANCE: Neutral | ACTION: Technical evaluator for merger integration and cloud deployment`,
+
+  'First Republic Bank_businesscase': `CURRENT STATE
+- Acquisition integration created unclassified data environments from the acquired entity across cloud platforms
+- OCC data governance requirements apply to the combined entity with elevated scrutiny during integration
+- CDO mandate to unify data classification has no vendor selected for multi-cloud classification at required speed
+BUSINESS IMPACT
+- OCC examination during integration could identify classification gaps triggering formal enforcement actions
+- Sensitive client financial data — account balances, transaction records, PII — exists in unclassified states across merged environments
+- Integration timeline creates urgency — classification posture must be demonstrable before next OCC examination cycle
+FUTURE STATE
+- Unified data classification across all merged cloud environments within days of Cyera deployment
+- CDO presents defensible OCC data governance posture demonstrating integration compliance
+- Continuous classification maintains governance posture as environments continue to consolidate`,
+
+  'First Republic Bank_pursuit': `ACTION: Activate partner contact for CDO introduction | STAKEHOLDER: Partner Contact and Angela Chen, CDO | TIMELINE: Week 1
+ACTION: Prepare OCC acquisition integration data governance briefing | STAKEHOLDER: Taylor Brooks internal prep | TIMELINE: Week 1
+ACTION: CDO introductory meeting via partner introduction | STAKEHOLDER: Angela Chen, CDO | TIMELINE: Week 2
+ACTION: Brief Chief Compliance Officer on OCC requirements for merged data environments | STAKEHOLDER: Lisa Park, Chief Compliance Officer | TIMELINE: Week 2
+ACTION: CISO meeting — technical architecture for unified classification across merged environments | STAKEHOLDER: David Kim, CISO | TIMELINE: Week 3
+ACTION: Technical discovery with VP Cloud Architecture on integration environment scope | STAKEHOLDER: James Wu, VP Cloud Architecture | TIMELINE: Week 4
+ACTION: Submit POV proposal scoped to merged cloud environments | STAKEHOLDER: Angela Chen, CDO | TIMELINE: Week 5
+ACTION: Present POV results and commercial proposal | STAKEHOLDER: Angela Chen and David Kim | TIMELINE: Week 7`,
+
+  'Varian Medical Systems_overview': `Executive Summary
+Varian's post-acquisition integration with Siemens Healthineers has created a PHI governance gap across radiation oncology platforms that the post-acquisition security review has flagged for remediation. Cold access means direct outbound to CISO with the Siemens integration angle is the primary path.
+
+Point of View
+Every medical device company that goes through an enterprise acquisition faces the same data governance challenge: the acquiring company's security standards are stricter than what was in place pre-acquisition, and the gap has to be closed on a defined timeline. For Varian, the Siemens integration has surfaced PHI governance gaps that Siemens Healthineers' enterprise security program now requires remediation of. I'd like to show you how Cyera closes that gap in the radiation oncology data environment without disrupting clinical workflows.`,
+
+  'Varian Medical Systems_stakeholders': `NAME: Chris Toth | TITLE: Chief Executive Officer | DEPT: Executive | STANCE: Neutral | ACTION: Board context — Siemens integration compliance is a C-suite priority
+NAME: Deepak Dhir | TITLE: Chief Financial Officer | DEPT: Finance | STANCE: Neutral | ACTION: Economic buyer context for remediation investment
+NAME: Marcus Lee | TITLE: Chief Information Security Officer | DEPT: Security | STANCE: Neutral | ACTION: Primary Economic Buyer — Siemens integration security mandate owner
+NAME: Jennifer Park | TITLE: Chief Privacy Officer | DEPT: Legal | STANCE: Supporter | ACTION: PHI governance owner — HIPAA compliance for oncology data
+NAME: Wei Zhang | TITLE: VP Software Engineering | DEPT: Engineering | STANCE: Neutral | ACTION: Treatment planning platform technical stakeholder
+NAME: Diana Martinez | TITLE: Director, Data Governance | DEPT: Compliance | STANCE: Supporter | ACTION: Day-to-day champion for post-acquisition data governance remediation`,
+
+  'Varian Medical Systems_businesscase': `CURRENT STATE
+- Post-acquisition integration with Siemens created PHI governance gap across radiation oncology treatment planning platforms
+- Siemens Healthineers enterprise security standards require classification and access controls that Varian pre-acquisition did not have in place
+- Post-acquisition security review has formally flagged the gap with a remediation timeline requirement
+BUSINESS IMPACT
+- HIPAA breach involving unclassified radiation oncology PHI would trigger notification obligations for thousands of cancer patients
+- Siemens Healthineers security review timeline creates urgency — failure to remediate could affect Siemens' broader enterprise security posture rating
+- Treatment planning IP and clinical AI algorithm data exposed without classification controls
+FUTURE STATE
+- PHI classified and governed across all Varian radiation oncology platforms within 72 hours of deployment
+- Siemens Healthineers post-acquisition security review remediation completed on defined timeline
+- HIPAA compliance demonstrated for all oncology patient data in cloud treatment planning systems`,
+
+  'Varian Medical Systems_pursuit': `ACTION: Send CISO cold outreach using Siemens integration security mandate angle | STAKEHOLDER: Marcus Lee, CISO | TIMELINE: Week 1
+ACTION: Brief Chief Privacy Officer on PHI classification approach for oncology data | STAKEHOLDER: Jennifer Park, Chief Privacy Officer | TIMELINE: Week 2
+ACTION: First CISO meeting — Siemens integration security standards and PHI gap | STAKEHOLDER: Marcus Lee, CISO | TIMELINE: Week 2
+ACTION: Engage Director Data Governance as day-to-day champion for evaluation | STAKEHOLDER: Diana Martinez, Director Data Governance | TIMELINE: Week 3
+ACTION: Technical discovery with VP Software Engineering on treatment planning data flows | STAKEHOLDER: Wei Zhang, VP Software Engineering | TIMELINE: Week 3
+ACTION: Submit POV proposal scoped to radiation oncology platform environment | STAKEHOLDER: Marcus Lee, CISO | TIMELINE: Week 5
+ACTION: Cyera executive engagement — VP peer meeting with CISO | STAKEHOLDER: Marcus Lee, CISO | TIMELINE: Week 6
+ACTION: Present POV results and commercial proposal | STAKEHOLDER: Marcus Lee and Jennifer Park | TIMELINE: Week 7`,
+};
+
+// ─── PRE-WRITTEN COACHING AGENDAS ────────────────────────────────────────────
+
+const PRE_COACHING = {
+  alex: `PIPELINE SNAPSHOT
+Alex is at 2.2x pipeline coverage against a 3.5x target — below target but the Salesforce and Wells Fargo opportunities are credible and could materially close the gap if they advance to evaluation this quarter.
+
+ACCOUNT SPOTLIGHT
+Salesforce — Key questions: Has Sara Chen confirmed the CISO introduction timing? What is the CISO's stated decision criteria for approving Agentforce production? What competing priorities might delay the security evaluation?
+
+STRATEGY COACHING MOMENT
+Alex understands the Salesforce Agentforce narrative well but has not yet tested the champion relationship with a specific ask. This week's coaching moment is practicing a concrete champion ask — "Can you get me 20 minutes with Marcus Torres before the board meeting?"
+
+THIS WEEK'S FOCUS
+Alex commits to briefing Sara Chen on Cyera positioning and making a specific CISO introduction ask — completed and confirmed by Friday EOD.
+
+RD COMMITMENT
+RD commits to reviewing the Salesforce first-call deck and providing feedback on the Agentforce governance positioning before Thursday.`,
+
+  morgan: `PIPELINE SNAPSHOT
+Morgan is at 1.7x pipeline coverage against the 3.5x target — significantly below target but NetApp and Applied Materials are near-term opportunities that could double qualified pipeline if advanced to evaluation this quarter.
+
+ACCOUNT SPOTLIGHT
+NetApp — Key questions: Has the Insight Enterprises contact been briefed and agreed to make the introduction? Does Morgan know the CISO's current Varonis renewal timeline? What specific coverage gaps is the CISO most frustrated by?
+
+STRATEGY COACHING MOMENT
+Morgan's strongest narrative is semiconductor IP protection but the fastest opportunity is Varonis displacement at NetApp. This week's coaching moment is preparing the displacement conversation — leading with the specific SaaS coverage gaps Varonis misses rather than Cyera's features.
+
+THIS WEEK'S FOCUS
+Morgan commits to briefing the Insight Enterprises contact on the displacement opportunity and confirming the CISO introduction within 5 business days.
+
+RD COMMITMENT
+RD commits to providing Morgan with a Varonis displacement reference story from a comparable technology company before the first NetApp meeting.`,
+
+  taylor: `PIPELINE SNAPSHOT
+Taylor is at 1.05x pipeline coverage against the 3.5x target — the most at-risk territory on the team. Two Tier 1 first meetings in the next 30 days is a minimum requirement to avoid a pipeline intervention.
+
+ACCOUNT SPOTLIGHT
+Intuitive Surgical — Key questions: Who specifically is the warm security contact and what is the relationship? Has Taylor reached out directly and confirmed interest in an introduction? What does Taylor know about the CISO's current priorities?
+
+STRATEGY COACHING MOMENT
+Taylor has warm access at Intuitive Surgical but has not converted it to a scheduled meeting. The coaching moment is identifying the specific hesitation and building a concrete outreach script for this week.
+
+THIS WEEK'S FOCUS
+Taylor commits to sending the Intuitive Surgical outreach email with a specific meeting request — sent and confirmed to RD by Wednesday.
+
+RD COMMITMENT
+RD commits to executive sponsorship for PG&E cold outreach — a peer RD-to-CISO LinkedIn message sent this week to supplement Taylor's cold outbound.`,
+};
+
+// ─── PRE-WRITTEN EXECUTIVE SUMMARY ───────────────────────────────────────────
+
+const PRE_EXECUTIVE_SUMMARY = `HEADLINE
+The Majors region is at 1.85x coverage against a 3.5x target — Alex Rivera has a credible pipeline but Morgan and Taylor need immediate intervention to protect the quarter.
+
+PIPELINE HEALTH
+- Regional coverage is 1.85x vs the 3.5x target, representing 47% of the pipeline goal
+- Alex Rivera at 2.2x is the strongest performer with account-specific triggers confirmed at all five Tier 1 accounts
+- Taylor Brooks at 1.05x is the most at-risk territory on the team and requires a coaching and pipeline intervention this week
+
+FORECAST
+- Total hard commit of $2.0M against $6.1M combined quota — commit confidence is moderate given CISO introduction timing at Salesforce is not yet confirmed
+- Best case of $3.5M is achievable if Salesforce and NetApp both advance to evaluation stage this quarter
+
+TOP OPPORTUNITIES
+- Salesforce: CISO has blocked Agentforce production expansion pending a data governance layer — champion introduction via Sara Chen is the critical next step
+- Wells Fargo: OCC consent order requires classification remediation by Q4 with CDO budget confirmed — Deloitte co-sponsorship is the entry path
+- Applied Materials: Board IP protection mandate with warm CISO contact and no incumbent — evaluation window is open now
+
+RISKS
+- Taylor Brooks at 1.05x pipeline coverage has no margin for a single deal slip — pipeline intervention and RD executive sponsorship are needed this week
+- Cold access at McKesson and Chevron creates single points of failure — partner activation via Deloitte and Palo Alto Networks must be prioritized
+
+RECOMMENDED ACTIONS
+- Provide executive sponsorship for Salesforce — a VP-to-CISO peer outreach accelerates the champion conversion Alex cannot achieve alone
+- Activate Deloitte managing director relationship at McKesson this week — the HIPAA audit finding creates urgency that makes co-sponsorship compelling right now
+- Schedule a pipeline intervention with Taylor Brooks to identify first meetings within 10 days and assign RD executive sponsorship at PG&E`;
+
+// ─── PRE-POPULATED ACCOUNT INTAKE (ALEX RIVERA) ──────────────────────────────
+
+const PRE_INTAKE_ALEX = {
+  'Salesforce': {
+    known_contacts: 'Sara Chen, VP Data Governance — met at Dreamforce 2024, strong relationship, has offered to introduce us to the CISO. Mark Torres, CISO — not yet met directly, Sara has confirmed he is the Economic Buyer for any data security platform decision.',
+    pain_hypothesis: 'Agentforce production expansion is blocked by the CISO until a data classification and governance layer is confirmed across CRM data. The board has set a Q3 deadline for Agentforce rollout — creating direct executive pressure on the security team to approve or find a solution.',
+    secondary_triggers: 'CCPA compliance exposure from Data Cloud customer data processing. Salesforce is also facing increased scrutiny from enterprise customers asking how their data is governed inside Agentforce workflows.',
+    evaluation_criteria: 'Time to value — CISO needs a solution deployable before Q3 board presentation. Agentless architecture — no agent deployment on production CRM systems. Coverage of Salesforce native cloud and connected SaaS platforms.',
+    competitive_context: 'No known incumbent DSPM. Varonis was evaluated 18 months ago but rejected due to agent overhead on Salesforce infrastructure. Microsoft Purview covers M365 but not Salesforce cloud. Deloitte has a relationship at the VP level and has offered to co-sponsor an intro.',
+    relationship_context: 'Warm access via Sara Chen champion relationship. Sara has offered to facilitate CISO introduction through the weekly security leadership briefing. Backup path is Deloitte managing director relationship.',
+    internal_exec_sponsor: 'Requesting Cyera Chief Revenue Officer for joint executive meeting with CISO. Goal is to demonstrate Cyera executive commitment to the Salesforce relationship given the strategic account value.',
+  },
+  'Wells Fargo': {
+    known_contacts: 'Michael Chen, CDO — identified as Economic Buyer through Deloitte financial services partner. Not yet met directly. Sarah Martinez, VP Cloud Security — Deloitte partner has offered a warm introduction. Patricia Wong, Chief Compliance Officer — secondary stakeholder for OCC consent order remediation.',
+    pain_hypothesis: 'OCC consent order requires Wells Fargo to demonstrate a credible data classification and governance posture across cloud environments. The CDO has a funded Q4 deadline to remediate. Legacy DLP was explicitly flagged as insufficient in the most recent audit finding.',
+    secondary_triggers: 'Multi-cloud migration accelerating faster than governance controls can keep pace. New cloud-native applications are generating sensitive financial data outside the perimeter of existing DLP coverage.',
+    evaluation_criteria: 'OCC audit readiness — solution must produce documentation acceptable to OCC examiners. Multi-cloud coverage across AWS, Azure, and on-premises. Time to compliance demonstration — CDO needs to show progress before Q4 deadline.',
+    competitive_context: 'Microsoft Purview is deployed for M365 but the CDO is not satisfied with multi-cloud coverage. BigID was evaluated by the privacy team last year — feedback was slow deployment and limited financial services use cases. No current DSPM in place.',
+    relationship_context: 'Partner path via Deloitte financial services practice. Deloitte managing director has agreed to co-sponsor a CDO introduction. Targeting a joint executive briefing in the next 30 days.',
+    internal_exec_sponsor: 'Requesting Cyera VP of Financial Services for joint CDO meeting co-sponsored by Deloitte. Deloitte relationship adds credibility in a regulated environment where vendor endorsement from a trusted advisor accelerates the evaluation.',
+  },
+  'McKesson Corporation': {
+    known_contacts: 'No warm contacts confirmed yet. James Rodriguez, CISO — identified as Economic Buyer through LinkedIn research and industry contacts. Dr. Lisa Park, Chief Privacy Officer — secondary stakeholder for HIPAA remediation. Pursuing introduction through Deloitte healthcare practice.',
+    pain_hypothesis: 'Post-divestiture cloud migration has created unclassified PHI across separated infrastructure. Internal audit confirmed the HIPAA exposure. The CISO has a remediation mandate but no current platform solution. This is a cold account requiring partner activation for access.',
+    secondary_triggers: 'AI-assisted supply chain optimization initiatives are creating new data flows across cloud environments that include sensitive pharmaceutical and patient data. These AI workloads are not covered by any current classification layer.',
+    evaluation_criteria: 'HIPAA compliance coverage — solution must classify and govern PHI across all cloud environments. Healthcare-specific classification models. Audit trail and documentation for HIPAA breach remediation evidence.',
+    competitive_context: 'No known DSPM incumbent. Legacy DLP covers on-premises systems but has no cloud visibility. Deloitte healthcare practice has a managing director relationship at McKesson and has agreed to co-sponsor an executive briefing.',
+    relationship_context: 'Cold account — no direct relationship confirmed. Primary access strategy is Deloitte co-sponsored executive briefing. Secondary path is outbound to CISO using confirmed HIPAA audit finding as the entry point.',
+    internal_exec_sponsor: 'Requesting Cyera Chief Revenue Officer for Deloitte co-sponsored executive briefing. A CRO-level engagement signals strategic commitment and matches the seniority of the CISO Economic Buyer.',
+  },
+  'Visa Inc.': {
+    known_contacts: 'David Kim, CISO — confirmed as Economic Buyer through AWS alliance team contact. Warm introduction pending via AWS. Jennifer Lee, Chief Risk Officer — key influencer for PCI-DSS compliance decisions. Robert Chen, VP Payment Security — technical stakeholder for fraud detection AI governance.',
+    pain_hypothesis: 'PCI-DSS 4.0 deadline requires classification controls on cardholder data processed by AI fraud detection models. The current classification layer does not extend to AI workloads. The CISO has acknowledged the gap internally according to AWS alliance contact.',
+    secondary_triggers: 'Real-time payment infrastructure expansion into new markets is creating new data environments that require PCI-DSS classification from day one. The pace of expansion is outpacing manual governance processes.',
+    evaluation_criteria: 'PCI-DSS 4.0 compliance coverage — must address cardholder data in AI workloads specifically. Real-time classification for payment processing environments. Global coverage across all Visa data centers and cloud regions.',
+    competitive_context: 'Tokenization vendor covers payment data in transit but does not address classification at rest or in AI models. Microsoft Purview evaluated but rejected due to limited coverage outside M365. No current DSPM in place for AI workloads.',
+    relationship_context: 'Warm access via AWS alliance team contact who has a direct relationship with the CISO. AWS has agreed to facilitate an introduction. Targeting first CISO meeting within 3 weeks.',
+    internal_exec_sponsor: 'Requesting Cyera VP of Financial Services for joint CISO meeting with AWS alliance team. AWS co-presence adds credibility given Visa runs significant workloads on AWS infrastructure.',
+  },
+  'Chevron Corporation': {
+    known_contacts: 'No confirmed warm contacts. Thomas Anderson, CISO — identified as Economic Buyer through industry research. Dr. Sarah Johnson, VP Digital and Technology — key sponsor for OT/IT convergence initiative. Pursuing introduction through Palo Alto Networks alliance team who has existing security relationship at Chevron.',
+    pain_hypothesis: 'OT/IT convergence is moving sensitive operational data into cloud environments for analytics and AI applications without a corresponding classification or access governance layer. CIO cloud-first mandate is accelerating the exposure window faster than the security team can govern it.',
+    secondary_triggers: 'Energy transition initiatives are creating new data environments for renewable energy operations that have no established data security baseline. These are greenfield environments where Cyera can establish the governance standard from day one.',
+    evaluation_criteria: 'OT data classification coverage — must handle operational technology data types specific to energy infrastructure. Multi-cloud coverage for hybrid OT/IT environments. Integration with existing OT security tools including Palo Alto Networks.',
+    competitive_context: 'Palo Alto Networks has an existing security relationship at Chevron covering network and endpoint security. No current DSPM in place. Legacy data governance tools cover structured data in core ERP systems but have no OT or cloud coverage.',
+    relationship_context: 'Cold account — no direct relationship. Primary access strategy is outbound to CISO using OT/IT convergence angle. Secondary path is activation of Palo Alto Networks alliance relationship for a warm introduction.',
+    internal_exec_sponsor: 'Requesting Cyera VP of Energy and Industrial for joint CISO outreach. Industry-specific executive presence is important in the energy sector where OT security expertise is a key credibility signal.',
+  },
+};
+
+// ─── UTILITIES ───────────────────────────────────────────────────────────────
+
+const fmtM = n => {
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return '$' + (n/1e3).toFixed(0) + 'K';
+  return '$' + n;
+};
+const fmtPct = n => (n * 100).toFixed(0) + '%';
+const covRatio = (pipeline, quota) => pipeline / quota;
+const covStr = (pipeline, quota) => (pipeline/quota).toFixed(1) + 'x';
+const scoreColor = s => s >= 80 ? '#22C55E' : s >= 60 ? '#F59E0B' : '#EF4444';
+const covColor = r => r >= 3.5 ? '#22C55E' : r > 2.45 ? '#F59E0B' : '#EF4444';
+const heatRatio = r => r >= 1.0 ? 'green' : r > 0.7 ? 'amber' : 'red';
+const statusTag = s => s === 'approved'
+  ? { label:'Approved', bg:'rgba(34,197,94,.12)', color:'#22C55E' }
+  : { label:'Needs Revision', bg:'rgba(239,68,68,.12)', color:'#EF4444' };
+const accessColor = a => a === 'Warm' ? '#22C55E' : a === 'Partner' ? '#00A1E0' : '#94A3B8';
+const tierColor = t => t === 1 ? '#00C2CB' : t === 2 ? '#F59E0B' : '#64748B';
+
+// ─── BASE COMPONENTS ─────────────────────────────────────────────────────────
+
+function Spinner() { return <span className="spinner" />; }
+
+function ScoreCircle({ score }) {
+  const bg = scoreColor(score);
+  return (
+    <div className="score-circle" style={{ background: bg + '22', border: '2px solid ' + bg, color: bg }}>
+      {score}
+    </div>
+  );
+}
+
+function TierBadge({ tier }) {
+  const c = tierColor(tier);
+  return (
+    <span className="badge" style={{ background: c + '18', color: c, border: '1px solid ' + c + '40' }}>
+      T{tier}
+    </span>
+  );
+}
+
+function AccessBadge({ access }) {
+  const c = accessColor(access);
+  return (
+    <span className="badge" style={{ background: c + '18', color: c }}>
+      {access}
+    </span>
+  );
+}
+
+function StatusTag({ status }) {
+  const t = statusTag(status);
+  return (
+    <span className="badge" style={{ background: t.bg, color: t.color }}>
+      {t.label}
+    </span>
+  );
+}
+
+function StatCard({ label, value, sub, color, mono }) {
+  return (
+    <div className="stat-card">
+      <div className="stat-label">{label}</div>
+      <div className="stat-value" style={{ color: color || 'var(--text)', fontSize: mono === false ? 18 : undefined }}>
+        {value}
+      </div>
+      {sub && <div className="stat-sub">{sub}</div>}
+    </div>
+  );
+}
+
+function ProgBar({ value, max, color, height }) {
+  const pct = Math.min((value / max) * 100, 100);
+  return (
+    <div className="pbar" style={{ height: height || 6 }}>
+      <div className="pfill" style={{ width: pct + '%', background: color || 'var(--cyan)' }} />
+    </div>
+  );
+}
+
+function AiBadge() {
+  return (
+    <span className="badge" style={{ background:'rgba(0,194,203,.15)', color:'var(--cyan)', border:'1px solid rgba(0,194,203,.3)' }}>
+      ✦ AI Generated
+    </span>
+  );
+}
+
+function SfLabel() {
+  return <span style={{ fontSize:10, color:'var(--blue)', fontWeight:600 }}>⚡ Salesforce</span>;
+}
+
+function SellerLabel() {
+  return <span style={{ fontSize:10, color:'var(--amber)', fontWeight:600 }}>✏️ Seller Enters</span>;
+}
+
+// ─── DEMO BANNER ─────────────────────────────────────────────────────────────
+
+function DemoBanner({ onDismiss }) {
+  return (
+    <div style={{
+      display:'flex', alignItems:'center', gap:10,
+      background:'rgba(0,194,203,.13)', border:'1px solid rgba(0,194,203,.35)',
+      borderRadius:8, padding:'10px 14px', marginBottom:18,
+    }}>
+      <span style={{ fontSize:16, flexShrink:0 }}>ℹ</span>
+      <span style={{ fontSize:12, color:'var(--cyan)', flex:1, lineHeight:1.5 }}>
+        <strong>Demo Mode</strong> — This demo runs entirely on pre-written content with simulated AI responses. No API key required. Alex Rivera's plan is fully pre-populated. Use Morgan Lee or Taylor Brooks to explore AI generation simulation.
+      </span>
+      <button
+        onClick={onDismiss}
+        style={{ background:'none', border:'none', color:'var(--cyan)', fontSize:16, padding:'0 4px', cursor:'pointer', flexShrink:0, lineHeight:1 }}
+      >×</button>
+    </div>
+  );
+}
+
+// ─── SIDEBAR ─────────────────────────────────────────────────────────────────
+
+const NAV_ITEMS = [
+  { id:'dashboard',  icon:'◉', label:'Regional Dashboard' },
+  { id:'territory',  icon:'◈', label:'Territory Plan' },
+  { id:'accounts',   icon:'◆', label:'Account Plans' },
+  { id:'coaching',   icon:'◐', label:'Weekly Coaching' },
+  { id:'executive',  icon:'◇', label:'Executive Summary' },
+];
+
+function Sidebar({ sellers, screen, selectedSeller, onNav, onSelectSeller }) {
+  return (
+    <div className="sidebar">
+      <div className="sb-logo">
+        SPIS
+        <span>Sales Planning Intelligence System</span>
+      </div>
+
+      <div className="sb-section">
+        <div className="sb-label">Navigation</div>
+        {NAV_ITEMS.map(n => (
+          <div key={n.id} className={'nav-item' + (screen === n.id ? ' active' : '')} onClick={() => onNav(n.id)}>
+            <span style={{ fontFamily:'monospace', fontSize:11 }}>{n.icon}</span>
+            {n.label}
+          </div>
+        ))}
+      </div>
+
+      <div className="sb-sellers">
+        <div style={{ fontSize:10, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase', color:'var(--dim)', marginBottom:8 }}>
+          Sellers
+        </div>
+        {sellers.map(s => {
+          const cov = covRatio(s.pipeline, s.quota) / 3.5;
+          const cc = covColor(s.pipeline / s.quota);
+          return (
+            <div
+              key={s.id}
+              className={'seller-card' + (selectedSeller === s.id ? ' active' : '')}
+              onClick={() => onSelectSeller(s.id)}
+            >
+              <div className="row-between">
+                <div className="seller-name">{s.name}</div>
+                <ScoreCircle score={s.plan_score} />
+              </div>
+              <div className="seller-meta">
+                <span>{fmtM(s.quota)}</span>
+                <span style={{ color: cc }}>{covStr(s.pipeline, s.quota)}</span>
+              </div>
+              <ProgBar value={s.plan_score} max={100} color={scoreColor(s.plan_score)} height={4} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── TOPBAR ───────────────────────────────────────────────────────────────────
+
+function Topbar({ screen, seller }) {
+  const label = NAV_ITEMS.find(n => n.id === screen)?.label || '';
+  return (
+    <div className="topbar">
+      <div style={{ flex:1 }}>
+        <span style={{ fontSize:13, fontWeight:600 }}>{label}</span>
+        {seller && (
+          <span style={{ fontSize:12, color:'var(--muted)', marginLeft:12 }}>
+            {seller.name} · {fmtM(seller.quota)} quota
+          </span>
+        )}
+      </div>
+      <div style={{ display:'flex', gap:16, fontSize:11 }}>
+        <span style={{ color:'var(--blue)' }}>⚡ Salesforce</span>
+        <span style={{ color:'var(--amber)' }}>✏️ Seller</span>
+        <span style={{ color:'var(--cyan)' }}>✦ AI Simulated</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── SCREEN 1: REGIONAL DASHBOARD ────────────────────────────────────────────
+
+function Screen1({ sellers, setSellers, onNav, onSelectSeller }) {
+  const totalPipeline = sellers.reduce((a, s) => a + s.pipeline, 0);
+  const totalQuota    = sellers.reduce((a, s) => a + s.quota, 0);
+  const totalCommit   = sellers.reduce((a, s) => a + s.forecast_commit, 0);
+  const totalYTD      = sellers.reduce((a, s) => a + s.ytd_closed, 0);
+  const regionalCov   = covRatio(totalPipeline, totalQuota);
+  const covRat        = regionalCov / 3.5;
+  const cc            = covColor(regionalCov);
+
+  const allAccounts = Object.values(ACCOUNTS_DATA).flat();
+  const tier1 = allAccounts.filter(a => a.tier === 1);
+  const tier2 = allAccounts.filter(a => a.tier === 2);
+  const tier3 = allAccounts.filter(a => a.tier === 3);
+
+  const competitors = [
+    { name:'Varonis',            diff:'Legacy on-prem DLP heritage; high agent overhead; limited cloud-native SaaS connector coverage' },
+    { name:'BigID',              diff:'ML-based classification; strong catalog; weaker enforcement and real-time posture management' },
+    { name:'Microsoft Purview',  diff:'Broad M365 integration; shallow multi-cloud coverage; complex licensing and limited depth' },
+    { name:'Wiz',                diff:'CNAPP focus; limited data classification depth; different buying motion (DevSecOps vs. CISO)' },
+    { name:'Status Quo',         diff:'Manual classification; incomplete coverage; fails AI governance and regulatory requirements at scale' },
+  ];
+
+  return (
+    <div>
+      <div className="row-between section-gap">
+        <h2>Regional Dashboard</h2>
+        <span style={{ fontSize:12, color:'var(--muted)' }}>Q2 · FY2026</span>
+      </div>
+
+      <div className="grid-4 section-gap">
+        <StatCard label="Total Pipeline" value={fmtM(totalPipeline)} sub="All 3 sellers combined" />
+        <StatCard label="Forecast Commit" value={fmtM(totalCommit)} sub="Committed forecast" />
+        <StatCard label="YTD Closed" value={fmtM(totalYTD)} sub={'Attainment ' + fmtPct(totalYTD/totalQuota)} />
+        <StatCard
+          label="Pipeline Coverage"
+          value={regionalCov.toFixed(1) + 'x'}
+          sub={'vs 3.5x target · ' + fmtPct(covRat)}
+          color={cc}
+        />
+      </div>
+
+      <div className="card section-gap">
+        <div className="row-between" style={{ marginBottom:14 }}>
+          <h3>Seller Performance</h3>
+          <div style={{ display:'flex', gap:10, fontSize:11, color:'var(--muted)' }}>
+            <span>Coverage target: 3.5x</span>
+          </div>
+        </div>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Quota</th>
+              <th>Pipeline</th>
+              <th style={{ minWidth:160 }}>Coverage</th>
+              <th>Commit</th>
+              <th>YTD Closed</th>
+              <th>Score</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {sellers.map(s => {
+              const cov = covRatio(s.pipeline, s.quota);
+              const cc2 = covColor(cov);
+              return (
+                <tr key={s.id}>
+                  <td style={{ fontWeight:600 }}>{s.name}</td>
+                  <td className="mono" style={{ fontSize:12 }}>{fmtM(s.quota)}</td>
+                  <td className="mono" style={{ fontSize:12 }}>{fmtM(s.pipeline)}</td>
+                  <td>
+                    <div style={{ minWidth:130 }}>
+                      <div className="row-between" style={{ marginBottom:3 }}>
+                        <span className="mono" style={{ fontSize:11, color:cc2 }}>{cov.toFixed(1)}x</span>
+                        <span style={{ fontSize:10, color:'var(--dim)' }}>/ 3.5x</span>
+                      </div>
+                      <ProgBar value={cov} max={3.5} color={cc2} height={5} />
+                    </div>
+                  </td>
+                  <td className="mono" style={{ fontSize:12 }}>{fmtM(s.forecast_commit)}</td>
+                  <td className="mono" style={{ fontSize:12 }}>{fmtM(s.ytd_closed)}</td>
+                  <td><ScoreCircle score={s.plan_score} /></td>
+                  <td><StatusTag status={s.plan_status} /></td>
+                  <td>
+                    <button className="btn-secondary" style={{ fontSize:11, padding:'4px 10px' }}
+                      onClick={() => { onSelectSeller(s.id); onNav('territory'); }}>
+                      Open →
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="grid-2 section-gap">
+        <div className="card">
+          <h3 style={{ marginBottom:14 }}>Territory Tier Breakdown</h3>
+          {[{ label:'Tier 1', accounts:tier1, color:'var(--cyan)' },
+            { label:'Tier 2', accounts:tier2, color:'var(--amber)' },
+            { label:'Tier 3', accounts:tier3, color:'var(--dim)' }].map(({ label, accounts, color }) => (
+            <div key={label} style={{ marginBottom:14 }}>
+              <div className="row" style={{ marginBottom:6 }}>
+                <span className="badge" style={{ background:color+'18', color, fontSize:10 }}>{label}</span>
+                <span style={{ fontSize:12, color:'var(--muted)' }}>{accounts.length} accounts</span>
+              </div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
+                {accounts.map(a => (
+                  <span key={a.name} style={{ fontSize:11, color:'var(--text)', background:'rgba(255,255,255,.05)', border:'1px solid var(--border)', borderRadius:4, padding:'2px 7px' }}>
+                    {a.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="card">
+          <h3 style={{ marginBottom:14 }}>Competitive Landscape</h3>
+          {competitors.map(c => (
+            <div key={c.name} style={{ display:'flex', gap:10, marginBottom:12, paddingBottom:12, borderBottom:'1px solid var(--border)' }}>
+              <div style={{ width:110, flexShrink:0 }}>
+                <span style={{ fontSize:12, fontWeight:600, color:'var(--text)' }}>{c.name}</span>
+              </div>
+              <div style={{ fontSize:12, color:'var(--muted)', lineHeight:1.5 }}>{c.diff}</div>
+            </div>
+          ))}
+          <div style={{ fontSize:11, color:'var(--dim)', marginTop:4 }}>
+            Differentiates on agentless deployment, 72-hr time-to-value, and cloud-native SaaS coverage.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SCREEN 2: TERRITORY PLAN BUILDER ────────────────────────────────────────
+
+function Screen2({ seller, sellers, setSellers }) {
+  const [tab, setTab] = useState(0);
+  const [intake, setIntake] = useState(() => PRE_POPULATED_INTAKE[seller.id] || {});
+  const [enriched, setEnriched] = useState(() => seller.name === 'Alex Rivera' ? PRE_ENRICHED : {});
+  const [enriching, setEnriching] = useState({});
+  const [expanded, setExpanded] = useState(() =>
+    seller.name === 'Alex Rivera' ? Object.fromEntries(Object.keys(PRE_ENRICHED).map(k => [k, false])) : {}
+  );
+  const [genPlan, setGenPlan] = useState(() => seller.name === 'Alex Rivera' ? PRE_GENERATED_PLAN : '');
+  const [genLoading, setGenLoading] = useState(false);
+  const [showBanner, setShowBanner] = useState(true);
+
+  const accounts = ACCOUNTS_DATA[seller.id] || [];
+  const enrichedCount = Object.keys(enriched).length;
+
+  const planScore = useMemo(() => {
+    const fields = ['pain_hypothesis','competitive','partner','pipeline_strategy','self_assessment','manager_ask'];
+    const filled = fields.filter(f => intake[f] && intake[f].trim().length > 10).length;
+    return Math.min(filled * 8, 48) + Math.min(enrichedCount * 5, 40) + (genPlan ? 12 : 0);
+  }, [intake, enrichedCount, genPlan]);
+
+  const getEnrichData = () =>
+    seller.id === 'morgan' ? PRE_ENRICHED_MORGAN :
+    seller.id === 'taylor' ? PRE_ENRICHED_TAYLOR : PRE_ENRICHED;
+
+  const enrichAccount = (acc) => {
+    if (enriching[acc.name]) return;
+    setEnriching(prev => ({ ...prev, [acc.name]: true }));
+    const content = getEnrichData()[acc.name] || `Account intelligence for ${acc.name} — see trigger details above.`;
+    setTimeout(() => {
+      setEnriched(prev => ({ ...prev, [acc.name]: content }));
+      setExpanded(prev => ({ ...prev, [acc.name]: true }));
+      setEnriching(prev => ({ ...prev, [acc.name]: false }));
+    }, 600);
+  };
+
+  const enrichAll = () => {
+    const unenriched = accounts.filter(a => !enriched[a.name]);
+    if (!unenriched.length) return;
+    const data = getEnrichData();
+    setEnriching(Object.fromEntries(unenriched.map(a => [a.name, true])));
+    Promise.all(unenriched.map(acc =>
+      new Promise(resolve => setTimeout(() => {
+        const content = data[acc.name] || `Account intelligence for ${acc.name} — see trigger details above.`;
+        setEnriched(prev => ({ ...prev, [acc.name]: content }));
+        setExpanded(prev => ({ ...prev, [acc.name]: true }));
+        resolve();
+      }, 600))
+    )).then(() => setEnriching({}));
+  };
+
+  const generatePlan = () => {
+    setGenLoading(true);
+    const planContent =
+      seller.id === 'morgan' ? PRE_GENERATED_PLAN_MORGAN :
+      seller.id === 'taylor' ? PRE_GENERATED_PLAN_TAYLOR :
+      PRE_GENERATED_PLAN;
+    setTimeout(() => {
+      setGenPlan(planContent);
+      setGenLoading(false);
+      setTab(2);
+    }, 600);
+  };
+
+  const tierGroups = [1,2,3].map(t => ({ tier:t, accounts: accounts.filter(a => a.tier === t) }));
+
+  return (
+    <div>
+      {seller.name === 'Alex Rivera' && showBanner && <DemoBanner onDismiss={() => setShowBanner(false)} />}
+      <div className="row-between section-gap">
+        <div>
+          <h2 style={{ marginBottom:4 }}>{seller.name} — Territory Plan</h2>
+          <div style={{ display:'flex', gap:16, fontSize:12, color:'var(--muted)' }}>
+            <span>Quota {fmtM(seller.quota)}</span>
+            <span>Pipeline {fmtM(seller.pipeline)}</span>
+            <span style={{ color: covColor(covRatio(seller.pipeline, seller.quota)) }}>
+              Coverage {covStr(seller.pipeline, seller.quota)}
+            </span>
+          </div>
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <div style={{ textAlign:'right' }}>
+            <div style={{ fontSize:10, color:'var(--dim)', marginBottom:4, textTransform:'uppercase', letterSpacing:'.07em' }}>Plan Completeness</div>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <ProgBar value={planScore} max={100} color={scoreColor(planScore)} height={6} />
+              <span className="mono" style={{ fontSize:13, fontWeight:600, color:scoreColor(planScore), minWidth:32 }}>{planScore}</span>
+            </div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:8, paddingLeft:12, borderLeft:'1px solid var(--border)' }}>
+            <StatusTag status={seller.plan_status} />
+            <button className="btn-success" style={{ fontSize:11, padding:'4px 10px' }}
+              onClick={() => setSellers(prev => prev.map(s => s.id === seller.id ? {...s, plan_status:'approved'} : s))}>
+              ✓ Approve
+            </button>
+            <button className="btn-danger" style={{ fontSize:11, padding:'4px 10px' }}
+              onClick={() => setSellers(prev => prev.map(s => s.id === seller.id ? {...s, plan_status:'needs_revision'} : s))}>
+              ↺ Revise
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="tabs-row">
+        {['AE Intake','Account Enrichment','Generated Plan'].map((t, i) => (
+          <button key={i} className={'tab-btn' + (tab === i ? ' active' : '')} onClick={() => setTab(i)}>{t}</button>
+        ))}
+      </div>
+
+      {tab === 0 && (
+        <div>
+          <div className="row" style={{ marginBottom:12 }}>
+            <SfLabel />
+            <span style={{ fontSize:12, color:'var(--muted)' }}>Salesforce-populated fields</span>
+          </div>
+          <div className="sf-grid section-gap">
+            {[
+              { label:'Quota', value: fmtM(seller.quota) },
+              { label:'Pipeline', value: fmtM(seller.pipeline) },
+              { label:'Win Rate', value: fmtPct(seller.win_rate) },
+              { label:'Avg Deal', value: fmtM(seller.avg_deal) },
+              { label:'Forecast Commit', value: fmtM(seller.forecast_commit) },
+              { label:'Best Case', value: fmtM(seller.forecast_best) },
+              { label:'YTD Closed', value: fmtM(seller.ytd_closed) },
+              { label:'Open Opps', value: seller.open_opps },
+            ].map(f => (
+              <div key={f.label} className="sf-field">
+                <div className="sf-label">{f.label}</div>
+                <div className="sf-value">{f.value}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="row" style={{ marginBottom:12 }}>
+            <SellerLabel />
+            <span style={{ fontSize:12, color:'var(--muted)' }}>Seller judgment — edit as needed</span>
+          </div>
+
+          {[
+            { key:'pain_hypothesis', label:'Pain Hypothesis' },
+            { key:'competitive', label:'Competitive Presence & Evaluation Context' },
+            { key:'partner', label:'Partner Strategy & Named Partner Contacts' },
+            { key:'pipeline_strategy', label:'Pipeline Generation Strategy' },
+            { key:'self_assessment', label:'Seller Self-Assessment' },
+            { key:'manager_ask', label:'What Seller Needs from Regional Director' },
+          ].map(f => (
+            <div key={f.key} className="seller-field">
+              <div className="seller-field-label">{f.label}</div>
+              <textarea
+                rows={4}
+                value={intake[f.key] || ''}
+                onChange={e => setIntake(prev => ({ ...prev, [f.key]: e.target.value }))}
+              />
+            </div>
+          ))}
+
+          <div style={{ marginTop:20, textAlign:'right' }}>
+            <button className="btn-primary" onClick={() => setTab(1)}>
+              Continue to Account Enrichment →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {tab === 1 && (
+        <div>
+          <div className="row-between section-gap">
+            <div>
+              <h3 style={{ marginBottom:4 }}>Account Enrichment</h3>
+              <span style={{ fontSize:12, color:'var(--muted)' }}>{enrichedCount} of {accounts.length} enriched</span>
+            </div>
+            <div style={{ display:'flex', gap:8 }}>
+              <button className="btn-secondary" onClick={enrichAll}>
+                Enrich All ✦
+              </button>
+              <button
+                className="btn-primary"
+                disabled={enrichedCount < 3 || genLoading}
+                onClick={generatePlan}
+              >
+                {genLoading ? <><Spinner /> Generating...</> : '✦ Generate Territory Plan'}
+              </button>
+            </div>
+          </div>
+
+          {enrichedCount < 3 && (
+            <div className="callout-info" style={{ marginBottom:16 }}>
+              Enrich at least 3 accounts to unlock territory plan generation ({3 - enrichedCount} more needed)
+            </div>
+          )}
+
+          <div className="grid-2">
+            <div>
+              {accounts.map(acc => (
+                <div key={acc.name} className="acc-card">
+                  <div className="acc-header" onClick={() => setExpanded(prev => ({ ...prev, [acc.name]: !prev[acc.name] }))}>
+                    <div style={{ flex:1 }}>
+                      <div className="row" style={{ marginBottom:4 }}>
+                        <span style={{ fontWeight:600, fontSize:13 }}>{acc.name}</span>
+                        <TierBadge tier={acc.tier} />
+                        <AccessBadge access={acc.access} />
+                      </div>
+                      <div style={{ fontSize:11, color:'var(--muted)' }}>{acc.industry} · ${acc.revenue}</div>
+                    </div>
+                    <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                      {enriching[acc.name] && <Spinner />}
+                      {enriched[acc.name] && !enriching[acc.name] && (
+                        <span style={{ fontSize:10, color:'var(--cyan)' }}>✦ Enriched</span>
+                      )}
+                      <button
+                        className={enriched[acc.name] ? 'btn-secondary' : 'btn-primary'}
+                        style={{ fontSize:11, padding:'4px 10px' }}
+                        disabled={enriching[acc.name]}
+                        onClick={e => { e.stopPropagation(); enrichAccount(acc); }}
+                      >
+                        {enriched[acc.name] ? 'Re-enrich' : 'Enrich ✦'}
+                      </button>
+                      <span style={{ color:'var(--dim)', fontSize:12 }}>{expanded[acc.name] ? '▲' : '▼'}</span>
+                    </div>
+                  </div>
+                  {expanded[acc.name] && (
+                    <div className="acc-body">
+                      <div style={{ fontSize:12, color:'var(--muted)', marginBottom:10, lineHeight:1.5 }}>
+                        <strong style={{ color:'var(--text)' }}>Trigger:</strong> {acc.trigger}
+                      </div>
+                      {enriched[acc.name] && (
+                        <div className="gen-block" style={{ fontSize:12 }}>{enriched[acc.name]}</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <div className="card" style={{ position:'sticky', top:0 }}>
+                <h3 style={{ marginBottom:14 }}>Tier Summary</h3>
+                {tierGroups.map(({ tier, accounts: accs }) => (
+                  <div key={tier} style={{ marginBottom:16 }}>
+                    <div className="row" style={{ marginBottom:6 }}>
+                      <TierBadge tier={tier} />
+                      <span style={{ fontSize:12, fontWeight:600 }}>{accs.length} accounts</span>
+                    </div>
+                    {accs.map(a => (
+                      <div key={a.name} style={{ display:'flex', justifyContent:'space-between', fontSize:12, padding:'4px 0', borderBottom:'1px solid rgba(30,58,95,.4)' }}>
+                        <span>{a.name}</span>
+                        <div style={{ display:'flex', gap:6 }}>
+                          <AccessBadge access={a.access} />
+                          {enriched[a.name] && <span style={{ color:'var(--cyan)', fontSize:10 }}>✦</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                {enrichedCount >= 3 && (
+                  <button className="btn-primary" style={{ width:'100%', marginTop:8 }} disabled={genLoading} onClick={generatePlan}>
+                    {genLoading ? <><Spinner /> Generating...</> : '✦ Generate Territory Plan'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === 2 && (
+        <div>
+          <div className="row-between" style={{ marginBottom:16 }}>
+            <div className="row"><AiBadge /><span style={{ fontSize:13, fontWeight:600, marginLeft:8 }}>Territory Plan — {seller.name}</span></div>
+            <button className="btn-secondary" disabled={genLoading} onClick={generatePlan}>
+              {genLoading ? <><Spinner /> Regenerating...</> : '↺ Regenerate'}
+            </button>
+          </div>
+          {genPlan
+            ? <TerritoryPlanRenderer content={genPlan} />
+            : (
+              <div style={{ textAlign:'center', padding:60, color:'var(--muted)' }}>
+                <div style={{ fontSize:32, marginBottom:12 }}>✦</div>
+                <div style={{ fontSize:14, marginBottom:8 }}>No plan generated yet</div>
+                <div style={{ fontSize:12, marginBottom:20 }}>Enrich at least 3 accounts and click Generate Territory Plan</div>
+                <button className="btn-primary" onClick={() => setTab(1)}>← Go to Account Enrichment</button>
+              </div>
+            )
+          }
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── PURSUIT TASK LIST ────────────────────────────────────────────────────────
+
+function PursuitTaskList({ content, accountName }) {
+  const [taskStatus, setTaskStatus] = useState({});
+
+  const taskLines = content.split('\n').filter(l => l.trim().startsWith('ACTION:'));
+  if (taskLines.length === 0) return <div className="gen-block">{content}</div>;
+
+  const tasks = taskLines.map((line, i) => {
+    const actionMatch = line.match(/ACTION:\s*([^|]+)/);
+    const stakeholderMatch = line.match(/STAKEHOLDER:\s*([^|]+)/);
+    const timelineMatch = line.match(/TIMELINE:\s*(.+)/);
+    return {
+      index: i,
+      action: actionMatch?.[1]?.trim() || '',
+      stakeholder: stakeholderMatch?.[1]?.trim() || '',
+      timeline: timelineMatch?.[1]?.trim() || '',
+    };
+  });
+
+  const borderColor = s => s === 'Complete' ? 'var(--green)' : s === 'In Progress' ? 'var(--amber)' : 'var(--border)';
+  const bgColor = s => s === 'Complete' ? 'rgba(34,197,94,.07)' : s === 'In Progress' ? 'rgba(245,158,11,.07)' : 'transparent';
+
+  return (
+    <div>
+      {tasks.map(task => {
+        const key = accountName + '_' + task.index;
+        const status = taskStatus[key] || 'Not Started';
+        return (
+          <div key={key} style={{
+            border: '1px solid ' + borderColor(status),
+            borderLeft: '3px solid ' + borderColor(status),
+            background: bgColor(status),
+            borderRadius: 8,
+            padding: '12px 14px',
+            marginBottom: 8,
+          }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12 }}>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, fontWeight:500, color:'var(--text)', marginBottom:6, lineHeight:1.5 }}>{task.action}</div>
+                <div style={{ display:'flex', gap:16, fontSize:11, color:'var(--muted)' }}>
+                  <span>👤 {task.stakeholder}</span>
+                  <span>🗓 {task.timeline}</span>
+                </div>
+              </div>
+              <select
+                value={status}
+                onChange={e => setTaskStatus(prev => ({...prev, [key]: e.target.value}))}
+                style={{ fontSize:11, minWidth:116 }}
+              >
+                <option>Not Started</option>
+                <option>In Progress</option>
+                <option>Complete</option>
+              </select>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── ACCOUNT PLAN RENDERERS ───────────────────────────────────────────────────
+
+function OverviewRenderer({ content }) {
+  const povIdx = content.search(/point of view/i);
+  if (povIdx === -1) return <div className="gen-block">{content}</div>;
+
+  const execRaw = content.slice(0, povIdx).replace(/^executive summary[\s:]*/i, '').trim();
+  const povRaw  = content.slice(povIdx).replace(/^point of view[^\n]*\n/i, '').trim();
+
+  return (
+    <div>
+      <div className="card" style={{ marginBottom:14 }}>
+        <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.09em', textTransform:'uppercase', color:'var(--muted)', marginBottom:10 }}>Executive Summary</div>
+        <p style={{ fontSize:13, lineHeight:1.8, color:'var(--text)' }}>{execRaw}</p>
+      </div>
+      <div style={{ background:'rgba(0,194,203,.05)', border:'1px solid rgba(0,194,203,.25)', borderLeft:'3px solid var(--cyan)', borderRadius:8, padding:16 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+          <span style={{ fontSize:10, fontWeight:700, letterSpacing:'.09em', textTransform:'uppercase', color:'var(--cyan)' }}>Point of View</span>
+          <span style={{ fontSize:10, background:'rgba(0,194,203,.15)', color:'var(--cyan)', padding:'2px 8px', borderRadius:4, fontWeight:600 }}>Ready to use as outreach</span>
+        </div>
+        <p style={{ fontSize:13, lineHeight:1.8, color:'var(--text)' }}>{povRaw}</p>
+      </div>
+    </div>
+  );
+}
+
+function StakeholderRenderer({ content }) {
+  const rows = content.split('\n')
+    .map(l => l.trim())
+    .filter(l => l.startsWith('NAME:'))
+    .map(l => {
+      const get = (key) => { const m = l.match(new RegExp(key + ':\\s*([^|]+)')); return m?.[1]?.trim() || ''; };
+      return { name: get('NAME'), title: get('TITLE'), dept: get('DEPT'), stance: get('STANCE'), action: get('ACTION') };
+    });
+
+  if (!rows.length) return <div className="gen-block">{content}</div>;
+
+  const stanceStyle = s => {
+    const sl = s.toLowerCase();
+    if (sl.includes('support')) return { color:'var(--green)',  bg:'rgba(34,197,94,.12)'  };
+    if (sl.includes('risk'))    return { color:'var(--red)',    bg:'rgba(239,68,68,.12)'  };
+    return                               { color:'var(--amber)', bg:'rgba(245,158,11,.12)' };
+  };
+
+  return (
+    <div style={{ overflowX:'auto' }}>
+      <table className="table">
+        <thead>
+          <tr>
+            {['Name','Title','Department','Stance','Recommended Action'].map(h => <th key={h}>{h}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => {
+            const ss = stanceStyle(r.stance);
+            return (
+              <tr key={i} style={{ background: i % 2 === 1 ? 'rgba(255,255,255,.018)' : 'transparent' }}>
+                <td style={{ fontWeight:600, fontSize:12 }}>{r.name}</td>
+                <td style={{ fontSize:12 }}>{r.title}</td>
+                <td style={{ fontSize:12, color:'var(--muted)' }}>{r.dept}</td>
+                <td>
+                  <span className="badge" style={{ background:ss.bg, color:ss.color, fontSize:10 }}>{r.stance}</span>
+                </td>
+                <td style={{ fontSize:12 }}>{r.action}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function BusinessCaseRenderer({ content }) {
+  const SECS = [
+    { label:'CURRENT STATE',  color:'var(--amber)', bg:'rgba(245,158,11,.07)',  border:'rgba(245,158,11,.22)' },
+    { label:'BUSINESS IMPACT',color:'#EF4444',       bg:'rgba(239,68,68,.07)',   border:'rgba(239,68,68,.22)'  },
+    { label:'FUTURE STATE',   color:'var(--cyan)',   bg:'rgba(0,194,203,.06)',   border:'rgba(0,194,203,.22)'  },
+  ];
+  const allPat = SECS.map(s => s.label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+  const parsed = {};
+  SECS.forEach(s => {
+    const esc = s.label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const m = content.match(new RegExp(esc + '[^\\n]*\\n([\\s\\S]*?)(?=\\n(?:' + allPat + ')|$)', 'i'));
+    if (m) parsed[s.label] = m[1].trim();
+  });
+  if (!Object.keys(parsed).length) return <div className="gen-block">{content}</div>;
+
+  return (
+    <div>
+      {SECS.map(s => !parsed[s.label] ? null : (
+        <div key={s.label} style={{ background:s.bg, border:'1px solid '+s.border, borderRadius:8, padding:'14px 16px', marginBottom:12 }}>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', color:s.color, marginBottom:10 }}>{s.label}</div>
+          <ul style={{ listStyle:'none', padding:0, margin:0 }}>
+            {parsed[s.label].split('\n').filter(l => l.trim()).map((line, i) => (
+              <li key={i} style={{ display:'flex', gap:8, marginBottom:6, fontSize:12.5, lineHeight:1.6, color:'var(--text)' }}>
+                <span style={{ color:s.color, flexShrink:0, marginTop:2 }}>•</span>
+                <span>{line.replace(/^[-•*]\s*/, '')}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ExecSummaryRenderer({ content }) {
+  const SECS = [
+    { label:'HEADLINE',              color:'var(--cyan)',  wide:true  },
+    { label:'PIPELINE HEALTH',       color:'var(--cyan)',  wide:false },
+    { label:'FORECAST',              color:'var(--green)', wide:false },
+    { label:'TOP OPPORTUNITIES',     color:'var(--blue)',  wide:false },
+    { label:'RISKS',                 color:'var(--red)',   wide:false },
+    { label:'RECOMMENDED ACTIONS',   color:'var(--amber)', wide:false },
+  ];
+  const allPat = SECS.map(s => s.label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+  const parsed = {};
+  SECS.forEach(s => {
+    const esc = s.label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const m = content.match(new RegExp(esc + '[^\\n]*\\n([\\s\\S]*?)(?=\\n(?:' + allPat + ')|$)', 'i'));
+    if (m) parsed[s.label] = m[1].trim();
+  });
+  if (!Object.keys(parsed).length) return <div className="gen-block">{content}</div>;
+
+  const headline = parsed['HEADLINE'];
+  const rest = SECS.slice(1);
+
+  return (
+    <div>
+      {headline && (
+        <div style={{ background:'rgba(0,194,203,.07)', border:'1px solid rgba(0,194,203,.22)', borderRadius:8, padding:'14px 16px', marginBottom:14 }}>
+          <p style={{ fontSize:14, fontWeight:600, color:'var(--text)', lineHeight:1.6, margin:0 }}>{headline.replace(/^[-•]\s*/,'')}</p>
+        </div>
+      )}
+      <div className="grid-2" style={{ gap:12 }}>
+        {rest.map(s => !parsed[s.label] ? null : (
+          <div key={s.label} style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:8, padding:'12px 14px' }}>
+            <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.09em', textTransform:'uppercase', color:s.color, marginBottom:8 }}>{s.label}</div>
+            <ul style={{ listStyle:'none', padding:0, margin:0 }}>
+              {parsed[s.label].split('\n').filter(l => l.trim()).map((line, i) => (
+                <li key={i} style={{ display:'flex', gap:7, marginBottom:5, fontSize:12, lineHeight:1.6, color:'var(--text)' }}>
+                  <span style={{ color:s.color, flexShrink:0 }}>•</span>
+                  <span>{line.replace(/^[-•*]\s*/, '')}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TerritoryPlanRenderer({ content }) {
+  const SEC_KEYS = [
+    'TERRITORY THESIS','TIER 1 ACCOUNTS','TIER 2 ACCOUNTS','TIER 3 ACCOUNTS',
+    'PURSUIT MOTION','ECOSYSTEM STRATEGY',
+    '30 DAY MILESTONES','60 DAY MILESTONES','90 DAY MILESTONES','KEY RISKS',
+  ];
+  const allPat = SEC_KEYS.map(s => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+  const parsed = {};
+  SEC_KEYS.forEach(k => {
+    const esc = k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const m = content.match(new RegExp(esc + '[^\\n]*\\n([\\s\\S]*?)(?=\\n(?:' + allPat + ')|$)', 'i'));
+    if (m) parsed[k] = m[1].trim();
+  });
+  if (!Object.keys(parsed).length) return <div className="gen-block">{content}</div>;
+
+  const MILESTONE_KEYS = ['30 DAY MILESTONES','60 DAY MILESTONES','90 DAY MILESTONES'];
+  const milestones = MILESTONE_KEYS.filter(k => parsed[k]);
+
+  const renderSection = (k) => (
+    <div key={k} style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:8, padding:'12px 16px', marginBottom:10 }}>
+      <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', color:'var(--cyan)', marginBottom:10, paddingBottom:6, borderBottom:'1px solid rgba(0,194,203,.18)' }}>{k}</div>
+      <ul style={{ listStyle:'none', padding:0, margin:0 }}>
+        {parsed[k].split('\n').filter(l => l.trim()).map((line, i) => (
+          <li key={i} style={{ display:'flex', gap:8, marginBottom:6, fontSize:12.5, lineHeight:1.6, color:'var(--text)' }}>
+            <span style={{ color:'var(--cyan)', flexShrink:0, marginTop:2 }}>•</span>
+            <span>{line.replace(/^[-•*]\s*/,'')}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  return (
+    <div>
+      {['TERRITORY THESIS','PURSUIT MOTION','ECOSYSTEM STRATEGY'].filter(k => parsed[k]).map(renderSection)}
+      {['TIER 1 ACCOUNTS','TIER 2 ACCOUNTS','TIER 3 ACCOUNTS'].some(k => parsed[k]) && (
+        <div className="grid-3" style={{ gap:10, marginBottom:10 }}>
+          {['TIER 1 ACCOUNTS','TIER 2 ACCOUNTS','TIER 3 ACCOUNTS'].filter(k => parsed[k]).map(k => (
+            <div key={k} style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:8, padding:'12px 14px' }}>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', color:'var(--cyan)', marginBottom:8, paddingBottom:6, borderBottom:'1px solid rgba(0,194,203,.18)' }}>{k}</div>
+              <ul style={{ listStyle:'none', padding:0, margin:0 }}>
+                {parsed[k].split('\n').filter(l => l.trim()).map((line, i) => (
+                  <li key={i} style={{ display:'flex', gap:7, marginBottom:5, fontSize:12, lineHeight:1.5, color:'var(--text)' }}>
+                    <span style={{ color:'var(--cyan)', flexShrink:0 }}>•</span>
+                    <span>{line.replace(/^[-•*]\s*/,'')}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+      {milestones.length > 0 && (
+        <div className="grid-3" style={{ gap:10, marginBottom:10 }}>
+          {milestones.map(renderSection)}
+        </div>
+      )}
+      {parsed['KEY RISKS'] && renderSection('KEY RISKS')}
+    </div>
+  );
+}
+
+// ─── SCREEN 3: ACCOUNT PLAN BUILDER ──────────────────────────────────────────
+
+function AccountPlanSection({ acc, seller, sectionKey, sectionLabel }) {
+  const stateKey = acc.name + '_' + sectionKey;
+  const [content, setContent] = useState(() =>
+    seller.name === 'Alex Rivera' ? (PRE_POPULATED_PLANS[stateKey] || '') : ''
+  );
+  const [loading, setLoading] = useState(false);
+
+  const generate = () => {
+    setLoading(true);
+    const simContent =
+      seller.name === 'Alex Rivera'
+        ? (PRE_POPULATED_PLANS[stateKey] || SIMULATED_RESPONSES[stateKey] || '')
+        : (SIMULATED_RESPONSES[stateKey] || '');
+    setTimeout(() => {
+      setContent(simContent);
+      setLoading(false);
+    }, 600);
+  };
+
+  const renderContent = () => {
+    if (sectionKey === 'overview')     return <OverviewRenderer content={content} />;
+    if (sectionKey === 'stakeholders') return <StakeholderRenderer content={content} />;
+    if (sectionKey === 'businesscase') return <BusinessCaseRenderer content={content} />;
+    if (sectionKey === 'pursuit')      return <PursuitTaskList content={content} accountName={acc.name} />;
+    return <div className="gen-block">{content}</div>;
+  };
+
+  return (
+    <div>
+      <div className="row-between" style={{ marginBottom:14 }}>
+        <div className="row">
+          <AiBadge />
+          <span style={{ fontSize:13, fontWeight:600, marginLeft:8 }}>{sectionLabel}</span>
+        </div>
+        <button className="btn-secondary" disabled={loading} onClick={generate}>
+          {loading ? <><Spinner /> Generating...</> : content ? '↺ Regenerate' : '✦ Generate'}
+        </button>
+      </div>
+      {content
+        ? renderContent()
+        : (
+          <div style={{ textAlign:'center', padding:48, color:'var(--muted)' }}>
+            <div style={{ fontSize:28, marginBottom:10 }}>✦</div>
+            <div style={{ fontSize:13, marginBottom:16 }}>Click Generate to create AI-powered {sectionLabel.toLowerCase()}</div>
+            <button className="btn-primary" onClick={generate} disabled={loading}>
+              {loading ? <><Spinner /> Generating...</> : '✦ Generate ' + sectionLabel}
+            </button>
+          </div>
+        )
+      }
+    </div>
+  );
+}
+
+function Screen3({ seller }) {
+  const accounts = ACCOUNTS_DATA[seller.id] || [];
+  const tier1 = accounts.filter(a => a.tier === 1);
+  const [selAcc, setSelAcc] = useState(() => tier1[0]?.name || '');
+  const [accTab, setAccTab] = useState(0);
+  const [accIntake, setAccIntake] = useState(() =>
+    seller.name === 'Alex Rivera' ? { ...PRE_INTAKE_ALEX } : {}
+  );
+  const [showBanner, setShowBanner] = useState(true);
+
+  const acc = accounts.find(a => a.name === selAcc);
+  const intake = accIntake[selAcc] || {};
+  const setIntakeField = (field, val) => {
+    setAccIntake(prev => ({ ...prev, [selAcc]: { ...(prev[selAcc] || {}), [field]: val } }));
+  };
+
+  return (
+    <div>
+      {seller.name === 'Alex Rivera' && showBanner && <DemoBanner onDismiss={() => setShowBanner(false)} />}
+      <div style={{ marginBottom:18 }}>
+        <h2 style={{ marginBottom:10 }}>{seller.name} — Account Plans</h2>
+        <div style={{ display:'flex', flexWrap:'wrap' }}>
+          {tier1.map(a => (
+            <button
+              key={a.name}
+              className={'tier-1-btn' + (selAcc === a.name ? ' active' : '')}
+              onClick={() => { setSelAcc(a.name); setAccTab(0); }}
+            >
+              {a.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {acc && (
+        <div>
+          <div className="card section-gap">
+            <div className="row" style={{ marginBottom:6 }}>
+              <h3>{acc.name}</h3>
+              <TierBadge tier={acc.tier} />
+              <AccessBadge access={acc.access} />
+              <span style={{ fontSize:12, color:'var(--muted)' }}>{acc.industry} · ${acc.revenue}</span>
+            </div>
+            <div style={{ fontSize:12, color:'var(--muted)', lineHeight:1.5 }}>
+              <strong style={{ color:'var(--blue)' }}>⚡ Trigger:</strong> {acc.trigger}
+            </div>
+          </div>
+
+          <div className="tabs-row">
+            {['Intake','Overview','Stakeholders','Business Case','Pursuit'].map((t, i) => (
+              <button key={i} className={'tab-btn' + (accTab === i ? ' active' : '')} onClick={() => setAccTab(i)}>{t}</button>
+            ))}
+          </div>
+
+          {accTab === 0 && (
+            <div>
+              <div className="row" style={{ marginBottom:10 }}>
+                <SfLabel />
+                <span style={{ fontSize:12, color:'var(--muted)' }}>Account data from Salesforce</span>
+              </div>
+              <div className="sf-grid section-gap">
+                {[
+                  { label:'Industry', value: acc.industry },
+                  { label:'Revenue', value: '$' + acc.revenue },
+                  { label:'Tier', value: 'Tier ' + acc.tier },
+                  { label:'Access', value: acc.access },
+                ].map(f => (
+                  <div key={f.label} className="sf-field">
+                    <div className="sf-label">{f.label}</div>
+                    <div className="sf-value">{f.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="row" style={{ marginBottom:10 }}>
+                <SellerLabel />
+                <span style={{ fontSize:12, color:'var(--muted)' }}>Account-specific seller judgment</span>
+              </div>
+
+              {[
+                { key:'known_contacts', label:'Known Contacts' },
+                { key:'relationship_context', label:'Relationship Context & Access Path' },
+                { key:'pain_hypothesis', label:'Pain Hypothesis' },
+                { key:'secondary_triggers', label:'Secondary Triggers' },
+                { key:'evaluation_criteria', label:'Evaluation Criteria' },
+                { key:'competitive_context', label:'Competitive & Partner Context' },
+                { key:'internal_exec_sponsor', label:'Internal Exec Sponsor' },
+              ].map(f => (
+                <div key={f.key} className="seller-field">
+                  <div className="seller-field-label">{f.label}</div>
+                  <textarea
+                    rows={3}
+                    value={intake[f.key] || ''}
+                    onChange={e => setIntakeField(f.key, e.target.value)}
+                    placeholder={'Enter ' + f.label.toLowerCase() + '...'}
+                    style={{ color:'var(--amber)' }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {accTab === 1 && <AccountPlanSection key={seller.id+'_'+selAcc+'_overview'} acc={acc} seller={seller} sectionKey="overview" sectionLabel="Account Overview" />}
+          {accTab === 2 && <AccountPlanSection key={seller.id+'_'+selAcc+'_stakeholders'} acc={acc} seller={seller} sectionKey="stakeholders" sectionLabel="Stakeholder Map" />}
+          {accTab === 3 && <AccountPlanSection key={seller.id+'_'+selAcc+'_businesscase'} acc={acc} seller={seller} sectionKey="businesscase" sectionLabel="Business Case" />}
+          {accTab === 4 && <AccountPlanSection key={seller.id+'_'+selAcc+'_pursuit'} acc={acc} seller={seller} sectionKey="pursuit" sectionLabel="Pursuit Plan" />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── COACHING AGENDA RENDERER ─────────────────────────────────────────────────
+
+function CoachingAgendaRenderer({ content }) {
+  const SECTIONS = [
+    { key:'PIPELINE SNAPSHOT',        color:'var(--blue)',  icon:'◉' },
+    { key:'ACCOUNT SPOTLIGHT',        color:'var(--cyan)',  icon:'◆' },
+    { key:'STRATEGY COACHING MOMENT', color:'var(--amber)', icon:'◐' },
+    { key:"THIS WEEK'S FOCUS",        color:'var(--green)', icon:'◈' },
+    { key:'RD COMMITMENT',            color:'var(--green)', icon:'◇' },
+  ];
+
+  const parsed = {};
+  SECTIONS.forEach((s, i) => {
+    const allEsc = SECTIONS.map(x => x.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+    const esc = s.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const m = content.match(new RegExp(esc + '[^\\n]*\\n+([\\s\\S]*?)(?=\\n+(?:' + allEsc + ')|$)', 'i'));
+    if (m) parsed[s.key] = m[1].trim();
+  });
+
+  if (!Object.keys(parsed).length) return <div className="gen-block">{content}</div>;
+
+  return (
+    <div>
+      {SECTIONS.map(s => !parsed[s.key] ? null : (
+        <div key={s.key} style={{
+          background:'var(--card)',
+          border:'1px solid var(--border)',
+          borderLeft:'3px solid ' + s.color,
+          borderRadius:8,
+          padding:'12px 16px',
+          marginBottom:10,
+        }}>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', color:s.color, marginBottom:8 }}>
+            {s.icon} {s.key}
+          </div>
+          <div style={{ fontSize:12.5, lineHeight:1.75, color:'var(--text)', whiteSpace:'pre-wrap' }}>{parsed[s.key]}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── SCREEN 5: WEEKLY COACHING DASHBOARD ─────────────────────────────────────
+
+function Screen5({ sellers }) {
+  const [selId, setSelId] = useState(null);
+  const [agenda, setAgenda] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const sel = sellers.find(s => s.id === selId);
+
+  const generateAgenda = () => {
+    if (!sel) return;
+    setLoading(true);
+    const content = PRE_COACHING[sel.id] || PRE_COACHING['alex'];
+    setTimeout(() => {
+      setAgenda(content);
+      setLoading(false);
+    }, 600);
+  };
+
+  return (
+    <div>
+      <h2 style={{ marginBottom:20 }}>Weekly Coaching Dashboard</h2>
+
+      <div className="grid-3 section-gap">
+        {sellers.map(s => {
+          const cov = covRatio(s.pipeline, s.quota);
+          const rat = cov / 3.5;
+          const heat = heatRatio(rat);
+          return (
+            <div
+              key={s.id}
+              className={'heat-card heat-' + heat + (selId === s.id ? '' : '')}
+              style={{ border: '2px solid ' + (heat==='green'?'var(--green)':heat==='amber'?'var(--amber)':'var(--red)'), opacity: selId && selId !== s.id ? .7 : 1 }}
+              onClick={() => setSelId(s.id === selId ? null : s.id)}
+            >
+              <div className="row-between" style={{ marginBottom:10 }}>
+                <span style={{ fontWeight:600, fontSize:14 }}>{s.name}</span>
+                <ScoreCircle score={s.plan_score} />
+              </div>
+
+              <div style={{ marginBottom:8 }}>
+                <div className="row-between" style={{ marginBottom:4 }}>
+                  <span style={{ fontSize:11, color:'var(--muted)' }}>Pipeline Coverage</span>
+                  <span className="mono" style={{ fontSize:12, color: heat==='green'?'var(--green)':heat==='amber'?'var(--amber)':'var(--red)' }}>
+                    {cov.toFixed(1)}x / 3.5x
+                  </span>
+                </div>
+                <ProgBar value={cov} max={3.5} color={heat==='green'?'var(--green)':heat==='amber'?'var(--amber)':'var(--red)'} height={6} />
+              </div>
+
+              <div className="grid-2" style={{ gap:8, marginBottom:10 }}>
+                <div>
+                  <div style={{ fontSize:10, color:'var(--dim)', textTransform:'uppercase', letterSpacing:'.06em' }}>Commit</div>
+                  <div className="mono" style={{ fontSize:13 }}>{fmtM(s.forecast_commit)}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize:10, color:'var(--dim)', textTransform:'uppercase', letterSpacing:'.06em' }}>YTD</div>
+                  <div className="mono" style={{ fontSize:13 }}>{fmtM(s.ytd_closed)}</div>
+                </div>
+              </div>
+
+              <div className="row-between">
+                <StatusTag status={s.plan_status} />
+                <span style={{ fontSize:11, color:'var(--muted)' }}>{s.open_opps} open opps</span>
+              </div>
+
+              {heat === 'red' && (
+                <div className="callout-warn" style={{ marginTop:10 }}>
+                  ⚠ Pipeline at {(rat*100).toFixed(0)}% of 3.5x target — coaching focus needed
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {selId && (
+        <div className="card">
+          <div className="row-between" style={{ marginBottom:14 }}>
+            <div className="row">
+              <AiBadge />
+              <h3 style={{ marginLeft:8 }}>Coaching Agenda — {sel?.name}</h3>
+            </div>
+            <button className="btn-primary" disabled={loading} onClick={generateAgenda}>
+              {loading ? <><Spinner /> Generating...</> : '✦ Generate Coaching Agenda'}
+            </button>
+          </div>
+          {agenda
+            ? <CoachingAgendaRenderer content={agenda} />
+            : <div style={{ fontSize:12, color:'var(--dim)', padding:'16px 0' }}>Click Generate Coaching Agenda to create an AI-powered session plan for {sel?.name}.</div>
+          }
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── SCREEN 6: EXECUTIVE SUMMARY ─────────────────────────────────────────────
+
+function Screen6({ sellers }) {
+  const [summary, setSummary] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const totalPipeline = sellers.reduce((a, s) => a + s.pipeline, 0);
+  const totalQuota    = sellers.reduce((a, s) => a + s.quota, 0);
+  const totalCommit   = sellers.reduce((a, s) => a + s.forecast_commit, 0);
+  const totalBest     = sellers.reduce((a, s) => a + s.forecast_best, 0);
+  const totalYTD      = sellers.reduce((a, s) => a + s.ytd_closed, 0);
+  const totalOpps     = sellers.reduce((a, s) => a + s.open_opps, 0);
+  const avgWinRate    = sellers.reduce((a, s) => a + s.win_rate, 0) / sellers.length;
+  const regCov        = covRatio(totalPipeline, totalQuota);
+
+  const maxPipeline = Math.max(...sellers.map(s => s.pipeline));
+
+  const generateSummary = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setSummary(PRE_EXECUTIVE_SUMMARY);
+      setLoading(false);
+    }, 600);
+  };
+
+  return (
+    <div>
+      <div className="row-between section-gap">
+        <h2>Executive Summary</h2>
+        <span style={{ fontSize:12, color:'var(--muted)' }}>Regional · Q2 FY2026</span>
+      </div>
+
+      <div className="grid-4 section-gap">
+        <StatCard label="Total Pipeline" value={fmtM(totalPipeline)} sub={'Regional aggregate'} />
+        <StatCard label="Total Quota" value={fmtM(totalQuota)} sub={'3 sellers'} />
+        <StatCard label="Regional Coverage" value={regCov.toFixed(1) + 'x'} sub={'Target 3.5x'} color={covColor(regCov)} />
+        <StatCard label="Forecast Commit" value={fmtM(totalCommit)} sub={'Hard commit'} />
+        <StatCard label="Best Case" value={fmtM(totalBest)} sub={'Upside scenario'} />
+        <StatCard label="YTD Closed" value={fmtM(totalYTD)} sub={'Attainment ' + fmtPct(totalYTD/totalQuota)} />
+        <StatCard label="Open Opportunities" value={totalOpps} sub={'Across all sellers'} />
+        <StatCard label="Avg Win Rate" value={fmtPct(avgWinRate)} sub={'Regional average'} />
+      </div>
+
+      <div className="card section-gap">
+        <h3 style={{ marginBottom:16 }}>Pipeline by Seller</h3>
+        {sellers.map(s => {
+          const cov = covRatio(s.pipeline, s.quota);
+          const cc = covColor(cov);
+          return (
+            <div key={s.id} style={{ marginBottom:18 }}>
+              <div className="row-between" style={{ marginBottom:5 }}>
+                <div className="row" style={{ gap:8 }}>
+                  <span style={{ fontWeight:600, fontSize:13 }}>{s.name}</span>
+                  <StatusTag status={s.plan_status} />
+                </div>
+                <span className="mono" style={{ fontSize:13, color:cc }}>{fmtM(s.pipeline)}</span>
+              </div>
+              <div style={{ height:12, background:'var(--border)', borderRadius:6, overflow:'hidden', marginBottom:4 }}>
+                <div style={{ height:'100%', width: (s.pipeline/maxPipeline*100)+'%', background:cc, borderRadius:6 }} />
+              </div>
+              <div style={{ display:'flex', gap:16, fontSize:11, color:'var(--dim)' }}>
+                <span>Coverage: <span style={{ color:cc }}>{cov.toFixed(1)}x</span></span>
+                <span>Commit: <span className="mono" style={{ color:'var(--text)' }}>{fmtM(s.forecast_commit)}</span></span>
+                <span>YTD: <span className="mono" style={{ color:'var(--text)' }}>{fmtM(s.ytd_closed)}</span></span>
+                <span>Score: <span style={{ color:scoreColor(s.plan_score) }}>{s.plan_score}</span></span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card">
+        <div className="row-between" style={{ marginBottom:14 }}>
+          <div className="row"><AiBadge /><h3 style={{ marginLeft:8 }}>AI Executive Summary</h3></div>
+          <button className="btn-primary" disabled={loading} onClick={generateSummary}>
+            {loading ? <><Spinner /> Generating...</> : '✦ Generate Executive Summary'}
+          </button>
+        </div>
+        {summary
+          ? <ExecSummaryRenderer content={summary} />
+          : <div style={{ fontSize:12, color:'var(--dim)', padding:'16px 0' }}>Click Generate to create an AI-powered executive summary for VP/CRO consumption.</div>
+        }
+      </div>
+    </div>
+  );
+}
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
+
+function App() {
+  const [screen, setScreen] = useState('dashboard');
+  const [selectedSeller, setSelectedSeller] = useState('alex');
+  const [sellers, setSellers] = useState(SELLERS_DATA);
+
+  const seller = sellers.find(s => s.id === selectedSeller) || sellers[0];
+  const showSeller = ['territory','accounts'].includes(screen);
+
+  return (
+    <div style={{ display:'flex', height:'100vh', overflow:'hidden' }}>
+      <Sidebar
+        sellers={sellers}
+        screen={screen}
+        selectedSeller={selectedSeller}
+        onNav={setScreen}
+        onSelectSeller={setSelectedSeller}
+      />
+      <div className="main">
+        <Topbar screen={screen} seller={showSeller ? seller : null} />
+        <div className="content">
+          {screen === 'dashboard' && (
+            <Screen1
+              sellers={sellers}
+              setSellers={setSellers}
+              onNav={setScreen}
+              onSelectSeller={setSelectedSeller}
+            />
+          )}
+          {screen === 'territory' && (
+            <Screen2
+              key={seller.id}
+              seller={seller}
+              sellers={sellers}
+              setSellers={setSellers}
+            />
+          )}
+          {screen === 'accounts' && (
+            <Screen3
+              key={seller.id}
+              seller={seller}
+            />
+          )}
+          {screen === 'coaching' && (
+            <Screen5 sellers={sellers} />
+          )}
+          {screen === 'executive' && (
+            <Screen6 sellers={sellers} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
